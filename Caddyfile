@@ -1,0 +1,19 @@
+{
+	email {$ACME_EMAIL}
+}
+
+{$APP_DOMAIN}, www.{$APP_DOMAIN} {
+	encode zstd gzip
+
+	handle /api/* {
+		reverse_proxy gateway:8080
+	}
+
+	handle /ws/* {
+		reverse_proxy gateway:8080
+	}
+
+	handle {
+		reverse_proxy frontend:80
+	}
+}

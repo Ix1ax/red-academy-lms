@@ -1,4 +1,22 @@
 services:
+  caddy:
+    image: caddy:2.8-alpine
+    container_name: lms-caddy
+    restart: unless-stopped
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:-xn--80aakcbevmv6a5n.xn--p1ai}
+      ACME_EMAIL: ${ACME_EMAIL:-admin@example.com}
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - frontend
+      - gateway
+
   postgres:
     image: postgres:16-alpine
     container_name: lms-postgres
@@ -7,7 +25,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-lms}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lms_password}
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./migrations/init.sql:/docker-entrypoint-initdb.d/001-init.sql:ro
@@ -21,7 +39,7 @@ services:
     image: redis:7-alpine
     container_name: lms-redis
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -35,8 +53,8 @@ services:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-lms}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-lms_password}
     ports:
-      - "${RABBITMQ_PORT:-5672}:5672"
-      - "${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
+      - "127.0.0.1:${RABBITMQ_PORT:-5672}:5672"
+      - "127.0.0.1:${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "ping"]
       interval: 10s
@@ -52,8 +70,8 @@ services:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minio}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minio_password}
     ports:
-      - "${MINIO_API_PORT:-9000}:9000"
-      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+      - "127.0.0.1:${MINIO_API_PORT:-9000}:9000"
+      - "127.0.0.1:${MINIO_CONSOLE_PORT:-9001}:9001"
     volumes:
       - minio_data:/data
     healthcheck:
@@ -80,7 +98,7 @@ services:
       redis:
         condition: service_healthy
     ports:
-      - "8081:8081"
+      - "127.0.0.1:8081:8081"
 
   organization-service:
     build:
@@ -106,7 +124,7 @@ services:
       minio:
         condition: service_healthy
     ports:
-      - "8082:8082"
+      - "127.0.0.1:8082:8082"
 
   learning-service:
     build:
@@ -132,7 +150,7 @@ services:
       minio:
         condition: service_healthy
     ports:
-      - "8083:8083"
+      - "127.0.0.1:8083:8083"
 
   communication-service:
     build:
@@ -158,7 +176,7 @@ services:
       minio:
         condition: service_healthy
     ports:
-      - "8084:8084"
+      - "127.0.0.1:8084:8084"
 
   gateway:
     build:
@@ -166,26 +184,28 @@ services:
       dockerfile: backend/gateway/Dockerfile
     container_name: lms-gateway
     environment:
-      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+      FRONTEND_URL: ${FRONTEND_URL:-https://${APP_DOMAIN:-xn--80aakcbevmv6a5n.xn--p1ai}}
     depends_on:
       - identity-service
       - organization-service
       - learning-service
       - communication-service
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
 
   frontend:
     build:
       context: ./frontend
+      args:
+        VITE_API_URL: ${VITE_API_URL:-}
     container_name: lms-frontend
-    environment:
-      VITE_API_URL: http://localhost:8080
     depends_on:
       - gateway
     ports:
-      - "5173:80"
+      - "127.0.0.1:${FRONTEND_PORT:-5173}:80"
 
 volumes:
+  caddy_data:
+  caddy_config:
   postgres_data:
   minio_data:
