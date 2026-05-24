@@ -1,0 +1,51 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: gateway
+  cloud:
+    gateway:
+      globalcors:
+        cors-configurations:
+          "[/**]":
+            allowedOriginPatterns:
+              - ${FRONTEND_URL:http://localhost:5173}
+              - http://localhost:5173
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - PATCH
+              - DELETE
+              - OPTIONS
+            allowedHeaders:
+              - "*"
+            allowCredentials: true
+      routes:
+        - id: identity-auth
+          uri: http://identity-service:8081
+          predicates:
+            - Path=/api/auth/**,/api/users/**
+        - id: organizations
+          uri: http://organization-service:8082
+          predicates:
+            - Path=/api/organizations/**
+        - id: learning-courses
+          uri: http://learning-service:8083
+          predicates:
+            - Path=/api/courses/**,/api/intensives/**,/api/tasks/**,/api/certificates/**
+        - id: communication-http
+          uri: http://communication-service:8084
+          predicates:
+            - Path=/api/notifications/**,/api/files/**
+        - id: communication-ws
+          uri: ws://communication-service:8084
+          predicates:
+            - Path=/ws/**
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

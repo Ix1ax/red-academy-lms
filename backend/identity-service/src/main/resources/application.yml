@@ -1,0 +1,20 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: identity-service
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/lms_platform}
+    username: ${SPRING_DATASOURCE_USERNAME:lms}
+    password: ${SPRING_DATASOURCE_PASSWORD:lms_password}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+jwt:
+  access-secret: ${JWT_ACCESS_SECRET:change-me-access-secret-change-me-access-secret}
+  refresh-secret: ${JWT_REFRESH_SECRET:change-me-refresh-secret-change-me-refresh-secret}

@@ -1,0 +1,191 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: lms-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-lms_platform}
+      POSTGRES_USER: ${POSTGRES_USER:-lms}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lms_password}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./migrations/init.sql:/docker-entrypoint-initdb.d/001-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-lms} -d ${POSTGRES_DB:-lms_platform}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: lms-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: lms-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-lms}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-lms_password}
+    ports:
+      - "${RABBITMQ_PORT:-5672}:5672"
+      - "${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 15
+      start_period: 60s
+
+  minio:
+    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
+    container_name: lms-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minio}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minio_password}
+    ports:
+      - "${MINIO_API_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  identity-service:
+    build:
+      context: .
+      dockerfile: backend/identity-service/Dockerfile
+    container_name: lms-identity-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-lms_platform}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-lms}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-lms_password}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-change-me-access-secret-change-me-access-secret}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-change-me-refresh-secret-change-me-refresh-secret}
+      SPRING_DATA_REDIS_HOST: redis
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8081:8081"
+
+  organization-service:
+    build:
+      context: .
+      dockerfile: backend/organization-service/Dockerfile
+    container_name: lms-organization-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-lms_platform}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-lms}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-lms_password}
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USER:-lms}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-lms_password}
+      S3_ENDPOINT: ${S3_ENDPOINT:-http://minio:9000}
+      S3_ACCESS_KEY: ${MINIO_ROOT_USER:-minio}
+      S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minio_password}
+      S3_BUCKET: ${S3_BUCKET:-lms-files}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    ports:
+      - "8082:8082"
+
+  learning-service:
+    build:
+      context: .
+      dockerfile: backend/learning-service/Dockerfile
+    container_name: lms-learning-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-lms_platform}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-lms}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-lms_password}
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USER:-lms}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-lms_password}
+      S3_ENDPOINT: ${S3_ENDPOINT:-http://minio:9000}
+      S3_ACCESS_KEY: ${MINIO_ROOT_USER:-minio}
+      S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minio_password}
+      S3_BUCKET: ${S3_BUCKET:-lms-files}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    ports:
+      - "8083:8083"
+
+  communication-service:
+    build:
+      context: .
+      dockerfile: backend/communication-service/Dockerfile
+    container_name: lms-communication-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-lms_platform}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-lms}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-lms_password}
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USER:-lms}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-lms_password}
+      S3_ENDPOINT: ${S3_ENDPOINT:-http://minio:9000}
+      S3_ACCESS_KEY: ${MINIO_ROOT_USER:-minio}
+      S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minio_password}
+      S3_BUCKET: ${S3_BUCKET:-lms-files}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    ports:
+      - "8084:8084"
+
+  gateway:
+    build:
+      context: .
+      dockerfile: backend/gateway/Dockerfile
+    container_name: lms-gateway
+    environment:
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+    depends_on:
+      - identity-service
+      - organization-service
+      - learning-service
+      - communication-service
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: lms-frontend
+    environment:
+      VITE_API_URL: http://localhost:8080
+    depends_on:
+      - gateway
+    ports:
+      - "5173:80"
+
+volumes:
+  postgres_data:
+  minio_data:

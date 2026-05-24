@@ -1,0 +1,2 @@
+-- Applied by migrations/init.sql in Docker demo environment.
+-- This file documents the communication-service up migration.
