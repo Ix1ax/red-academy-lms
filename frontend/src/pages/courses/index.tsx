@@ -258,6 +258,7 @@ export function CoursesPage({
 export function CoursePreviewPage({ courseId, courses, session }: { courseId: string; courses: Course[]; session: Session | null }) {
   const catalogCourse = courses.find((c) => c.id === courseId);
   const [details, setDetails] = useState<CourseDetails | null>(null);
+  const [detailsLoading, setDetailsLoading] = useState(true);
   const [enrollmentStatus, setEnrollmentStatus] = useState<string>("NOT_ENROLLED");
   const [enrolling, setEnrolling] = useState(false);
 
@@ -268,7 +269,11 @@ export function CoursePreviewPage({ courseId, courses, session }: { courseId: st
   const isEnrolled = enrollmentStatus === "ACTIVE" || enrollmentStatus === "COMPLETED";
 
   useEffect(() => {
-    apiRequest<CourseDetails>(`/api/courses/${courseId}`).then(setDetails).catch(() => {});
+    setDetailsLoading(true);
+    apiRequest<CourseDetails>(`/api/courses/${courseId}`)
+      .then(setDetails)
+      .catch(() => {})
+      .finally(() => setDetailsLoading(false));
     if (session) {
       const org = session.user.organizationId ? `&organizationId=${session.user.organizationId}` : "";
       apiRequest<CourseProgress>(`/api/courses/${courseId}/progress?userId=${session.user.id}${org}`)
@@ -359,12 +364,28 @@ export function CoursePreviewPage({ courseId, courses, session }: { courseId: st
         {/* Program */}
         <div className="grid gap-3">
           <h2 className="text-[17px] font-semibold text-ink">Программа курса</h2>
-          {groups.length ? groups.map((group, gi) => (
-            <motion.div
+          {detailsLoading ? (
+            <div className="grid gap-3">
+              {[1, 2].map((i) => (
+                <div key={i} className="overflow-hidden rounded-2xl border border-line bg-white shadow-card animate-pulse">
+                  <div className="flex items-center gap-3 border-b border-line bg-surface px-4 py-3">
+                    <div className="h-4 w-4 rounded bg-line" />
+                    <div className="h-3 w-32 rounded bg-line" />
+                    <div className="ml-auto h-4 w-16 rounded-full bg-line" />
+                  </div>
+                  {[1, 2, 3].map((j) => (
+                    <div key={j} className="flex items-center gap-3 border-b border-line px-4 py-3 last:border-0">
+                      <div className="h-7 w-7 rounded-full bg-line" />
+                      <div className="h-3 flex-1 rounded bg-line" />
+                      <div className="h-3 w-14 rounded bg-line" />
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          ) : groups.length ? groups.map((group) => (
+            <div
               key={group.id}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: gi * 0.08 }}
               className="overflow-hidden rounded-2xl border border-line bg-white shadow-card"
             >
               <div className="flex items-center gap-3 border-b border-line bg-surface px-4 py-3">
@@ -384,7 +405,7 @@ export function CoursePreviewPage({ courseId, courses, session }: { courseId: st
                   </div>
                 ))}
               </div>
-            </motion.div>
+            </div>
           )) : (
             <div className="rounded-2xl border border-dashed border-line bg-white p-8 text-center">
               <BookOpen size={28} className="mx-auto text-muted/30" />

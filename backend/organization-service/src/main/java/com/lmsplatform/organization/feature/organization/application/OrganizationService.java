@@ -160,7 +160,7 @@ public class OrganizationService {
 
     public List<PartnerRequestDto> partnerRequests() {
         return jdbc.query("""
-                SELECT pr.id, pr.organization_id, pr.company_name, pr.contact_email, pr.description, pr.status, pr.created_at, pr.reviewed_at
+                SELECT pr.id, pr.organization_id, pr.company_name, pr.contact_email, pr.description, pr.status, pr.created_at, pr.reviewed_at, pr.review_reason
                 FROM organization.partner_requests pr
                 LEFT JOIN organization.organizations o ON o.id = pr.organization_id
                 WHERE o.type IS NULL OR o.type <> 'MAIN_COMPANY'

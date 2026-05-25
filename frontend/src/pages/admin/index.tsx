@@ -61,18 +61,18 @@ export function AdminPage({ courses, intensives, session }: { courses: Course[];
       const coursePath = session?.user.organizationId
         ? `/api/courses?status=ALL&organizationId=${session.user.organizationId}`
         : "/api/courses?status=ALL";
-      const [nextUsers, nextOrgs, nextRequests, nextCourses] = await Promise.all([
+      const [usersRes, orgsRes, requestsRes, coursesRes, intensivesRes] = await Promise.allSettled([
         apiRequest<AdminUser[]>("/api/users"),
         apiRequest<Organization[]>("/api/organizations"),
         apiRequest<PartnerRequest[]>("/api/organizations/partner-requests"),
         apiRequest<Course[]>(coursePath),
+        apiRequest<Intensive[]>("/api/intensives"),
       ]);
-      setUsers(nextUsers);
-      setOrganizations(nextOrgs);
-      setPartnerRequests(nextRequests);
-      setAllCourses(nextCourses);
-    } catch {
-      toastError("Данные временно недоступны", "Попробуйте обновить страницу.");
+      if (usersRes.status === "fulfilled") setUsers(usersRes.value);
+      if (orgsRes.status === "fulfilled") setOrganizations(orgsRes.value);
+      if (requestsRes.status === "fulfilled") setPartnerRequests(requestsRes.value);
+      if (coursesRes.status === "fulfilled") setAllCourses(coursesRes.value);
+      if (intensivesRes.status === "fulfilled") setAllIntensives(intensivesRes.value);
     } finally {
       setLoading(false);
     }
