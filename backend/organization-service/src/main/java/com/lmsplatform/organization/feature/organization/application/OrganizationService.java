@@ -376,7 +376,7 @@ public class OrganizationService {
 
     private PartnerRequestDto getPartnerRequest(UUID id) {
         var rows = jdbc.query("""
-                SELECT id, organization_id, company_name, contact_email, description, status, created_at, reviewed_at
+                SELECT id, organization_id, company_name, contact_email, description, status, created_at, reviewed_at, review_reason
                 FROM organization.partner_requests
                 WHERE id = ?
                 """, (rs, rowNum) -> mapPartnerRequest(rs), id);
@@ -411,6 +411,25 @@ public class OrganizationService {
                 rs.getObject("doc_charter_id", UUID.class),
                 rs.getObject("doc_poa_id", UUID.class)
         );
+    }
+
+    public OrganizationDto update(UUID id, OrganizationUpdateRequest request) {
+        get(id); // ensure exists
+        jdbc.update("""
+                UPDATE organization.organizations
+                SET name        = COALESCE(NULLIF(?, ''), name),
+                    description = COALESCE(?, description),
+                    inn         = COALESCE(NULLIF(?, ''), inn),
+                    ogrn        = COALESCE(NULLIF(?, ''), ogrn),
+                    updated_at  = now()
+                WHERE id = ?
+                """,
+                request.name(),
+                request.description(),
+                request.inn(),
+                request.ogrn(),
+                id);
+        return get(id);
     }
 
     public OrganizationDto updateDocuments(UUID organizationId, String docType, UUID fileId) {

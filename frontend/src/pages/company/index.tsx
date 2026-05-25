@@ -13,12 +13,15 @@ import {
   Clock,
   FolderKanban,
   Mail,
+  Pencil,
   Plus,
+  Save,
   Send,
   Trophy,
   UserPlus,
   Users,
   UsersRound,
+  X,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
@@ -62,6 +65,15 @@ export function CompanyPage({
   const [invites, setInvites] = useState<Invite[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(false);
 
+  // Company edit
+  const [editingCompany, setEditingCompany] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editInn, setEditInn] = useState("");
+  const [editOgrn, setEditOgrn] = useState("");
+  const [savingCompany, setSavingCompany] = useState(false);
+  const [orgData, setOrgData] = useState<{ name: string; description?: string | null; inn?: string | null; ogrn?: string | null } | null>(null);
+
   const isMainCompany = session?.user.role === "ADMIN";
   const companyCourses = useMemo(
     () =>
@@ -89,17 +101,48 @@ export function CompanyPage({
     if (!session?.user.organizationId) return;
     setLoadingMembers(true);
     try {
-      const [nextMembers, nextInvites] = await Promise.all([
+      const [nextMembers, nextInvites, org] = await Promise.all([
         apiRequest<CompanyMember[]>(`/api/organizations/${session.user.organizationId}/members`),
         apiRequest<Invite[]>(`/api/organizations/${session.user.organizationId}/invites`),
+        apiRequest<{ name: string; description?: string | null; inn?: string | null; ogrn?: string | null }>(`/api/organizations/${session.user.organizationId}`),
       ]);
       setMembers(nextMembers);
       setInvites(nextInvites);
+      setOrgData(org);
     } catch {
       // silent
     } finally {
       setLoadingMembers(false);
     }
+  }
+
+  async function saveCompany() {
+    if (!session?.user.organizationId || savingCompany) return;
+    setSavingCompany(true);
+    try {
+      const updated = await apiRequest<{ name: string; description?: string | null; inn?: string | null; ogrn?: string | null }>(
+        `/api/organizations/${session.user.organizationId}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({ name: editName.trim() || undefined, description: editDescription.trim() || undefined, inn: editInn.trim() || undefined, ogrn: editOgrn.trim() || undefined }),
+        },
+      );
+      setOrgData(updated);
+      setEditingCompany(false);
+      toastSuccess("Данные компании обновлены");
+    } catch (e) {
+      toastError("Не удалось сохранить данные", e instanceof Error ? e.message : undefined);
+    } finally {
+      setSavingCompany(false);
+    }
+  }
+
+  function startEdit() {
+    setEditName(orgData?.name ?? "");
+    setEditDescription(orgData?.description ?? "");
+    setEditInn(orgData?.inn ?? "");
+    setEditOgrn(orgData?.ogrn ?? "");
+    setEditingCompany(true);
   }
 
   async function sendInvite() {
@@ -183,6 +226,61 @@ export function CompanyPage({
               />
             </div>
           </div>
+
+          {/* Company data edit */}
+          {!isMainCompany && (orgData || editingCompany) && (
+            <div className="rounded-3xl border border-line bg-white p-5 shadow-panel">
+              <div className="mb-4 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="grid h-9 w-9 place-items-center rounded-xl bg-red-50 text-primary">
+                    <Building2 size={18} />
+                  </div>
+                  <div>
+                    <h2 className="text-[15px] font-semibold text-ink">Данные компании</h2>
+                    <p className="text-[12px] text-muted">{orgData?.name}</p>
+                  </div>
+                </div>
+                {!editingCompany && (
+                  <button onClick={startEdit} className="flex items-center gap-1.5 rounded-xl border border-line px-3 py-1.5 text-[12px] font-medium text-muted transition hover:border-primary hover:text-primary">
+                    <Pencil size={12} />Редактировать
+                  </button>
+                )}
+              </div>
+              {editingCompany ? (
+                <div className="grid gap-3">
+                  <StudioField label="Название компании" value={editName} onChange={setEditName} />
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <StudioField label="ИНН" value={editInn} onChange={setEditInn} />
+                    <StudioField label="ОГРН" value={editOgrn} onChange={setEditOgrn} />
+                  </div>
+                  <label className="grid gap-1.5 text-sm font-medium text-ink">
+                    Описание
+                    <textarea
+                      className="min-h-20 rounded-xl border border-line px-3 py-2 text-sm outline-none focus:border-primary"
+                      placeholder="Описание компании..."
+                      value={editDescription}
+                      onChange={(e) => setEditDescription(e.target.value)}
+                    />
+                  </label>
+                  <div className="flex gap-2">
+                    <button onClick={saveCompany} disabled={savingCompany} className="inline-flex h-9 items-center gap-2 rounded-xl bg-primary px-4 text-[13px] font-semibold text-white disabled:opacity-50">
+                      <Save size={13} />{savingCompany ? "Сохранение..." : "Сохранить"}
+                    </button>
+                    <button onClick={() => setEditingCompany(false)} className="h-9 px-4 rounded-xl border border-line text-[13px] text-muted">
+                      <X size={13} />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid gap-2 text-[13px]">
+                  {orgData?.inn && <div className="flex justify-between border-b border-line pb-1.5"><span className="text-muted">ИНН</span><span className="font-medium text-ink">{orgData.inn}</span></div>}
+                  {orgData?.ogrn && <div className="flex justify-between border-b border-line pb-1.5"><span className="text-muted">ОГРН</span><span className="font-medium text-ink">{orgData.ogrn}</span></div>}
+                  {orgData?.description && <p className="text-muted text-[12px]">{orgData.description}</p>}
+                  {!orgData?.inn && !orgData?.ogrn && !orgData?.description && <p className="text-[12px] text-muted italic">Нажмите «Редактировать» чтобы заполнить данные</p>}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Invite section */}
           {!isMainCompany && (

@@ -1,2 +1,2 @@
--- Applied by migrations/init.sql in Docker demo environment.
+-- Applied by top-level numbered migrations in Docker demo environment.
 -- This file documents the identity-service up migration.

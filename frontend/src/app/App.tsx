@@ -36,7 +36,7 @@ import {
   UsersRound,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const navItems: Array<{ path: string; label: string; icon: typeof LayoutDashboard; roles?: Role[] }> = [
   { path: "/", label: "Главная", icon: LayoutDashboard },
@@ -73,6 +73,39 @@ export function App() {
     persistSession(next);
     setSessionState(next);
   };
+
+  // Refresh session user data on app start to pick up role/org changes made by admin
+  useEffect(() => {
+    const stored = loadSession();
+    if (!stored) return;
+    fetch("/api/users/me", {
+      headers: { Authorization: `Bearer ${stored.accessToken}` },
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((user) => {
+        if (!user) return;
+        const refreshed: Session = {
+          ...stored,
+          user: {
+            id: user.id,
+            email: user.email,
+            fullName: user.fullName,
+            role: user.role,
+            organizationId: user.organizationId ?? null,
+          },
+        };
+        // Only update if something actually changed
+        if (
+          stored.user.role !== refreshed.user.role ||
+          stored.user.organizationId !== refreshed.user.organizationId ||
+          stored.user.fullName !== refreshed.user.fullName
+        ) {
+          setSession(refreshed);
+        }
+      })
+      .catch(() => {/* silent — offline / token expired */});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const courseId = routeParam(path, "/courses/");
   const intensiveId = routeParam(path, "/intensives/");

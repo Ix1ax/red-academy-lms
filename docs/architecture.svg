@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 580" font-family="'Inter', 'Segoe UI', Arial, sans-serif">
+
+  <!-- bg -->
+  <rect width="1080" height="580" fill="#f8f9fb"/>
+
+  <!-- ── left layer labels ── -->
+  <text x="16" y="96"  font-size="9" font-weight="600" fill="#b0b8c8" letter-spacing="1.4">КЛИЕНТ</text>
+  <text x="16" y="199" font-size="9" font-weight="600" fill="#b0b8c8" letter-spacing="1.4">REVERSE PROXY / TLS</text>
+  <text x="16" y="302" font-size="9" font-weight="600" fill="#b0b8c8" letter-spacing="1.4">API GATEWAY</text>
+  <text x="16" y="394" font-size="9" font-weight="600" fill="#b0b8c8" letter-spacing="1.4">МИКРОСЕРВИСЫ</text>
+  <text x="16" y="490" font-size="9" font-weight="600" fill="#b0b8c8" letter-spacing="1.4">ИНФРАСТРУКТУРА</text>
+
+  <!-- left divider -->
+  <line x1="218" y1="30" x2="218" y2="550" stroke="#e4e8ef" stroke-width="1"/>
+
+  <!-- ── horizontal row separators ── -->
+  <line x1="218" y1="148" x2="1064" y2="148" stroke="#e4e8ef" stroke-width="1" stroke-dasharray="4 4"/>
+  <line x1="218" y1="252" x2="1064" y2="252" stroke="#e4e8ef" stroke-width="1" stroke-dasharray="4 4"/>
+  <line x1="218" y1="354" x2="1064" y2="354" stroke="#e4e8ef" stroke-width="1" stroke-dasharray="4 4"/>
+  <line x1="218" y1="450" x2="1064" y2="450" stroke="#e4e8ef" stroke-width="1" stroke-dasharray="4 4"/>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- FRONTEND                                           -->
+  <!-- ══════════════════════════════════════════════════ -->
+  <rect x="486" y="56" width="268" height="68" rx="8" fill="#ffffff" stroke="#dce1ea" stroke-width="1.5"/>
+  <!-- left accent bar -->
+  <rect x="486" y="56" width="4" height="68" rx="2" fill="#3b82f6"/>
+  <text x="640" y="82"  text-anchor="middle" font-size="13" font-weight="700" fill="#1e293b">React SPA</text>
+  <text x="640" y="99"  text-anchor="middle" font-size="10.5" fill="#64748b">TypeScript · Tailwind CSS · Vite</text>
+  <text x="640" y="114" text-anchor="middle" font-size="10" font-weight="600" fill="#3b82f6" font-family="'Consolas', monospace">frontend :80</text>
+
+  <!-- down arrow -->
+  <line x1="640" y1="124" x2="640" y2="158" stroke="#94a3b8" stroke-width="1.5"/>
+  <polygon points="635,154 645,154 640,162" fill="#94a3b8"/>
+  <!-- up arrow -->
+  <polygon points="635,126 645,126 640,118" fill="#94a3b8"/>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- CADDY                                              -->
+  <!-- ══════════════════════════════════════════════════ -->
+  <rect x="486" y="162" width="268" height="68" rx="8" fill="#ffffff" stroke="#dce1ea" stroke-width="1.5"/>
+  <rect x="486" y="162" width="4" height="68" rx="2" fill="#E8192C"/>
+  <text x="640" y="188" text-anchor="middle" font-size="13" font-weight="700" fill="#1e293b">Caddy 2</text>
+  <text x="640" y="205" text-anchor="middle" font-size="10.5" fill="#64748b">HTTPS · Let's Encrypt · your-domain.com</text>
+  <text x="640" y="220" text-anchor="middle" font-size="10" font-weight="600" fill="#E8192C" font-family="'Consolas', monospace">:443 / :80</text>
+
+  <line x1="640" y1="230" x2="640" y2="262" stroke="#94a3b8" stroke-width="1.5"/>
+  <polygon points="635,258 645,258 640,266" fill="#94a3b8"/>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- GATEWAY                                            -->
+  <!-- ══════════════════════════════════════════════════ -->
+  <rect x="486" y="266" width="268" height="64" rx="8" fill="#ffffff" stroke="#dce1ea" stroke-width="1.5"/>
+  <rect x="486" y="266" width="4" height="64" rx="2" fill="#E8192C"/>
+  <text x="640" y="290" text-anchor="middle" font-size="13" font-weight="700" fill="#1e293b">Spring Cloud Gateway</text>
+  <text x="640" y="307" text-anchor="middle" font-size="10.5" fill="#64748b">Маршрутизация /api/* · CORS · JWT</text>
+  <text x="640" y="322" text-anchor="middle" font-size="10" font-weight="600" fill="#E8192C" font-family="'Consolas', monospace">:8080</text>
+
+  <!-- fan-out lines  centers: 310, 522, 734, 950 -->
+  <line x1="640" y1="330" x2="640" y2="346" stroke="#94a3b8" stroke-width="1.5"/>
+  <line x1="310" y1="346" x2="950" y2="346" stroke="#94a3b8" stroke-width="1.5"/>
+  <line x1="310" y1="346" x2="310" y2="358" stroke="#94a3b8" stroke-width="1.5"/>
+  <line x1="522" y1="346" x2="522" y2="358" stroke="#94a3b8" stroke-width="1.5"/>
+  <line x1="734" y1="346" x2="734" y2="358" stroke="#94a3b8" stroke-width="1.5"/>
+  <line x1="950" y1="346" x2="950" y2="358" stroke="#94a3b8" stroke-width="1.5"/>
+  <polygon points="305,356 315,356 310,364" fill="#94a3b8"/>
+  <polygon points="517,356 527,356 522,364" fill="#94a3b8"/>
+  <polygon points="729,356 739,356 734,364" fill="#94a3b8"/>
+  <polygon points="945,356 955,356 950,364" fill="#94a3b8"/>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- 4 MICROSERVICES  w=192 gap=12  x: 214,418,622,830 -->
+  <!-- ══════════════════════════════════════════════════ -->
+
+  <rect x="214" y="364" width="192" height="68" rx="8" fill="#ffffff" stroke="#dce1ea" stroke-width="1.5"/>
+  <rect x="214" y="364" width="4" height="68" rx="2" fill="#f59e0b"/>
+  <text x="310" y="386" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e293b">identity-service</text>
+  <text x="310" y="402" text-anchor="middle" font-size="10" fill="#64748b">Пользователи · JWT · Роли</text>
+  <text x="310" y="420" text-anchor="middle" font-size="10" font-weight="600" fill="#f59e0b" font-family="'Consolas', monospace">:8081</text>
+
+  <rect x="418" y="364" width="208" height="68" rx="8" fill="#ffffff" stroke="#dce1ea" stroke-width="1.5"/>
+  <rect x="418" y="364" width="4" height="68" rx="2" fill="#f59e0b"/>
+  <text x="522" y="386" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e293b">organization-service</text>
+  <text x="522" y="402" text-anchor="middle" font-size="10" fill="#64748b">Организации · Партнёры · Инвайты</text>
+  <text x="522" y="420" text-anchor="middle" font-size="10" font-weight="600" fill="#f59e0b" font-family="'Consolas', monospace">:8082</text>
+
+  <rect x="638" y="364" width="192" height="68" rx="8" fill="#ffffff" stroke="#dce1ea" stroke-width="1.5"/>
+  <rect x="638" y="364" width="4" height="68" rx="2" fill="#f59e0b"/>
+  <text x="734" y="386" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e293b">learning-service</text>
+  <text x="734" y="402" text-anchor="middle" font-size="10" fill="#64748b">Курсы · Интенсивы · Прогресс</text>
+  <text x="734" y="420" text-anchor="middle" font-size="10" font-weight="600" fill="#f59e0b" font-family="'Consolas', monospace">:8083</text>
+
+  <rect x="842" y="364" width="218" height="68" rx="8" fill="#ffffff" stroke="#dce1ea" stroke-width="1.5"/>
+  <rect x="842" y="364" width="4" height="68" rx="2" fill="#f59e0b"/>
+  <text x="951" y="386" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e293b">communication-service</text>
+  <text x="951" y="402" text-anchor="middle" font-size="10" fill="#64748b">Уведомления · WebSocket · Аудит</text>
+  <text x="951" y="420" text-anchor="middle" font-size="10" font-weight="600" fill="#f59e0b" font-family="'Consolas', monospace">:8084</text>
+
+  <!-- arrow to infra -->
+  <line x1="640" y1="432" x2="640" y2="458" stroke="#94a3b8" stroke-width="1.5"/>
+  <polygon points="635,454 645,454 640,462" fill="#94a3b8"/>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- INFRASTRUCTURE                                     -->
+  <!-- ══════════════════════════════════════════════════ -->
+
+  <rect x="214" y="462" width="192" height="72" rx="8" fill="#ffffff" stroke="#dce1ea" stroke-width="1.5"/>
+  <rect x="214" y="462" width="4" height="72" rx="2" fill="#10b981"/>
+  <text x="310" y="485" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e293b">PostgreSQL 16</text>
+  <text x="310" y="501" text-anchor="middle" font-size="10" fill="#64748b">4 схемы БД</text>
+  <text x="310" y="524" text-anchor="middle" font-size="10" font-weight="600" fill="#10b981" font-family="'Consolas', monospace">:5432</text>
+
+  <rect x="418" y="462" width="208" height="72" rx="8" fill="#ffffff" stroke="#dce1ea" stroke-width="1.5"/>
+  <rect x="418" y="462" width="4" height="72" rx="2" fill="#ef4444"/>
+  <text x="522" y="485" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e293b">Redis 7</text>
+  <text x="522" y="501" text-anchor="middle" font-size="10" fill="#64748b">Кэш / сессии</text>
+  <text x="522" y="524" text-anchor="middle" font-size="10" font-weight="600" fill="#ef4444" font-family="'Consolas', monospace">:6379</text>
+
+  <rect x="638" y="462" width="192" height="72" rx="8" fill="#ffffff" stroke="#dce1ea" stroke-width="1.5"/>
+  <rect x="638" y="462" width="4" height="72" rx="2" fill="#8b5cf6"/>
+  <text x="734" y="485" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e293b">RabbitMQ 3.13</text>
+  <text x="734" y="501" text-anchor="middle" font-size="10" fill="#64748b">AMQP события</text>
+  <text x="734" y="524" text-anchor="middle" font-size="10" font-weight="600" fill="#8b5cf6" font-family="'Consolas', monospace">:5672</text>
+
+  <rect x="842" y="462" width="218" height="72" rx="8" fill="#ffffff" stroke="#dce1ea" stroke-width="1.5"/>
+  <rect x="842" y="462" width="4" height="72" rx="2" fill="#f59e0b"/>
+  <text x="951" y="485" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e293b">MinIO</text>
+  <text x="951" y="501" text-anchor="middle" font-size="10" fill="#64748b">S3 файловое хранилище</text>
+  <text x="951" y="524" text-anchor="middle" font-size="10" font-weight="600" fill="#f59e0b" font-family="'Consolas', monospace">:9000</text>
+
+</svg>

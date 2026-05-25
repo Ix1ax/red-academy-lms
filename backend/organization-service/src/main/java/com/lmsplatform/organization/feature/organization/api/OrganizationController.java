@@ -44,6 +44,12 @@ public class OrganizationController {
         return organizations.get(id);
     }
 
+    @PatchMapping("/{id}")
+    public OrganizationDto update(@PathVariable("id") UUID id,
+                                  @RequestBody OrganizationUpdateRequest request) {
+        return organizations.update(id, request);
+    }
+
     record UpdateDocumentRequest(String docType, UUID fileId) {}
 
     @PatchMapping("/{id}/documents")

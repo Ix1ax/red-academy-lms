@@ -1,72 +1,155 @@
-# red-academy-lms
+<p align="center">
+  <img src="docs/logo.svg" alt="РЕД Академия" width="96" />
+</p>
 
-## Deploy через Docker и Caddy
+<h1 align="center">РЕД Академия</h1>
 
-Проект подготовлен для запуска за Caddy reverse proxy. Caddy принимает внешний HTTP/HTTPS-трафик, автоматически получает TLS-сертификат Let's Encrypt и прокидывает запросы:
+<p align="center">
+  <a href="https://редакадемия.рф">
+    <img src="https://img.shields.io/badge/редакадемия.рф-E8192C?style=flat-square&logo=data:image/svg%2Bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIiB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCI+CiAgPHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIHJ4PSI0NCIgcnk9IjQ0IiBmaWxsPSIjRTgxOTJDIi8+CiAgPHRleHQKICAgIHg9IjEwMCIKICAgIHk9IjE0OCIKICAgIGZvbnQtZmFtaWx5PSInQXJpYWwgQmxhY2snLCAnSGVsdmV0aWNhIE5ldWUnLCBBcmlhbCwgc2Fucy1zZXJpZiIKICAgIGZvbnQtc2l6ZT0iMTMwIgogICAgZm9udC13ZWlnaHQ9IjkwMCIKICAgIGZpbGw9IndoaXRlIgogICAgdGV4dC1hbmNob3I9Im1pZGRsZSIKICAgIGRvbWluYW50LWJhc2VsaW5lPSJhdXRvIgogICAgbGV0dGVyLXNwYWNpbmc9Ii00IgogID5QPC90ZXh0Pgo8L3N2Zz4K&logoColor=white" alt="редакадемия.рф" />
+  </a>
+</p>
 
-- `/api/*` и `/ws/*` в `gateway`;
-- остальные запросы во `frontend`.
+<p align="center">
+  <img src="https://img.shields.io/badge/Java-17-ED8B00?style=flat-square&logo=openjdk&logoColor=white" />
+  <img src="https://img.shields.io/badge/Spring_Boot-3.3.5-6DB33F?style=flat-square&logo=springboot&logoColor=white" />
+  <img src="https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=black" />
+  <img src="https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white" />
+  <img src="https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql&logoColor=white" />
+  <img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white" />
+</p>
 
-Домен `редакадемия.рф` в конфигурации используется в Punycode:
+<p align="center">
+  Корпоративная платформа для управления обучением — курсы, интенсивы, сертификаты и аналитика в одном месте.
+</p>
 
-```text
-xn--80aakcbevmv6a5n.xn--p1ai
-```
+---
 
-### 1. DNS в REG.RU
+## Что внутри?
 
-В DNS-зоне домена добавьте A-записи на публичный IP сервера:
+Микросервисная архитектура на Java + Spring Boot, SPA на React/TypeScript, всё поднимается одной командой через Docker Compose.
 
-```text
-@      A      SERVER_IP
-www    A      SERVER_IP
-```
+<p align="center">
+  <img src="docs/architecture.svg" alt="Architecture" width="100%" />
+</p>
 
-Проверьте, что у домена используются DNS-серверы REG.RU: `ns1.reg.ru` и `ns2.reg.ru`.
+| Сервис | Назначение |
+|---|---|
+| `identity-service` | Регистрация, авторизация, JWT, управление пользователями |
+| `organization-service` | Организации, партнёрские заявки, сотрудники, инвайты |
+| `learning-service` | Курсы, уроки, тесты, интенсивы, задания, сертификаты |
+| `communication-service` | Уведомления (WebSocket + RabbitMQ), аудит |
+| `gateway` | Единая точка входа, CORS, проксирование |
+| `frontend` | React SPA (Vite + TypeScript + Tailwind) |
 
-### 2. Переменные окружения
+---
 
-На сервере создайте `.env` из примера:
+## Быстрый старт
+
+### Требования
+
+- Docker 24+ и Docker Compose v2
+- Порты `5173` и `8080` должны быть свободны
+
+### Локальная разработка
 
 ```bash
+git clone <repo-url>
+cd lms-platform
+
 cp .env.example .env
+# При необходимости поменяй пароли и JWT-секреты
+
+docker compose up --build -d \
+  postgres redis rabbitmq minio \
+  identity-service organization-service learning-service communication-service \
+  gateway frontend
 ```
 
-Минимально поменяйте:
+После сборки (~3–5 минут в первый раз):
 
-```text
-APP_DOMAIN=xn--80aakcbevmv6a5n.xn--p1ai
-ACME_EMAIL=your-email@example.com
-POSTGRES_PASSWORD=strong-password
-RABBITMQ_PASSWORD=strong-password
-MINIO_ROOT_PASSWORD=strong-password
-JWT_ACCESS_SECRET=long-random-secret
-JWT_REFRESH_SECRET=long-random-secret
-FRONTEND_URL=https://xn--80aakcbevmv6a5n.xn--p1ai
-```
+| Что | URL |
+|---|---|
+| Платформа | `http://localhost:5173` |
+| API Gateway | `http://localhost:8080` |
+| RabbitMQ UI | `http://localhost:15672` |
+| MinIO Console | `http://localhost:9001` |
 
-`VITE_API_URL` для деплоя оставьте пустым. Тогда frontend будет обращаться к API по тому же домену.
+> Caddy для локалки не нужен — он только для прода с доменом и HTTPS.
 
-### 3. Запуск
+### Прод (с доменом и TLS)
+
+Раскомментируй в `.env` блок Caddy, укажи домен и email, затем:
 
 ```bash
-docker compose up -d --build
+docker compose up --build -d
 ```
 
-После запуска приложение должно открываться по:
+Caddy сам получит сертификат Let's Encrypt и поднимет HTTPS.
 
-```text
-https://редакадемия.рф
-https://www.редакадемия.рф
+### Остановка
+
+```bash
+docker compose down        # остановить
+docker compose down -v     # остановить + сбросить все данные
 ```
 
-### 4. Важные порты
+---
 
-Публично должны быть открыты только:
+## Переменные окружения
 
-```text
-80/tcp
-443/tcp
+Все настройки — в файле `.env` (создаётся из `.env.example`).
+
+**Обязательно сменить перед деплоем:**
+
+| Переменная | Описание |
+|---|---|
+| `JWT_ACCESS_SECRET` | Секрет для подписи access-токенов |
+| `JWT_REFRESH_SECRET` | Секрет для подписи refresh-токенов |
+| `POSTGRES_PASSWORD` | Пароль PostgreSQL |
+| `RABBITMQ_PASSWORD` | Пароль RabbitMQ |
+| `MINIO_ROOT_PASSWORD` | Пароль MinIO |
+
+---
+
+## Роли пользователей
+
+| Роль | Описание |
+|---|---|
+| `ADMIN` | Полный доступ: модерация, управление организациями и пользователями |
+| `PARTNER_MANAGER` | Управление компанией-партнёром, доступ к корпоративным курсам |
+| `MENTOR` | Проверка заданий, выставление оценок в интенсивах |
+| `STUDENT` | Прохождение публичных курсов |
+| `CORPORATE_STUDENT` | Прохождение курсов своей организации |
+
+---
+
+## Стек
+
+**Backend** — Java 17, Spring Boot 3.3.5, Spring Security (JWT), JdbcTemplate (без ORM), Maven multi-module
+
+**Frontend** — React 18, TypeScript, Vite, Tailwind CSS, framer-motion, lucide-react
+
+**Хранилище** — PostgreSQL 16 (4 схемы), Redis 7, MinIO (S3)
+
+**Очередь** — RabbitMQ 3.13, async-события между сервисами + WebSocket для уведомлений
+
+**Инфраструктура** — Docker Compose, Caddy 2 (прод, автоматический TLS)
+
+---
+
+## Схема базы данных
+
+Одна база PostgreSQL, разбитая на 4 схемы:
+
+```
+identity      → users, sessions, refresh_tokens
+organization  → organizations, members, invites, partner_requests
+learning      → courses, modules, lessons, enrollments,
+                intensives, tasks, task_submissions, certificates
+communication → notifications, audit_log
 ```
 
-Остальные порты сервисов привязаны к `127.0.0.1`, чтобы PostgreSQL, Redis, RabbitMQ, MinIO и backend-сервисы не торчали наружу.
+Миграции применяются автоматически при первом старте PostgreSQL из нумерованных SQL-файлов в корне `migrations/`.
+
+---
