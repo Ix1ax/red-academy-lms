@@ -31,6 +31,12 @@ public class IdentityController {
         return identity.me(authorization);
     }
 
+    @PatchMapping("/auth/profile")
+    public UserDto updateProfile(@RequestHeader("Authorization") String authorization,
+                                 @RequestBody UpdateProfileRequest request) {
+        return identity.updateProfile(authorization, request);
+    }
+
     @GetMapping("/users")
     public List<UserDto> users(@RequestHeader(value = "Authorization", required = false) String authorization) {
         return identity.users(authorization);

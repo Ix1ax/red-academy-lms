@@ -10,6 +10,7 @@ import { HomePage, type PlatformStats } from "@/pages/home";
 import { IntensiveDetailsPage, IntensivesPage } from "@/pages/intensives";
 import { MentorPage } from "@/pages/mentor";
 import { PartnerPage } from "@/pages/partner";
+import { PrivacyPage } from "@/pages/privacy";
 import { ProfilePage } from "@/pages/profile";
 import { useApiData } from "@/shared/api/use-api-data";
 import { hasRole, loadSession, persistSession, roleLabels, type Role, type Session } from "@/shared/auth/session";
@@ -117,9 +118,13 @@ export function App() {
     if (path === "/profile") {
       return (
         <Protected roles={["STUDENT", "CORPORATE_STUDENT", "PARTNER_MANAGER", "MENTOR", "ADMIN"]} session={session}>
-          <ProfilePage session={session} />
+          <ProfilePage session={session} onSessionChange={setSession} />
         </Protected>
       );
+    }
+
+    if (path === "/privacy") {
+      return <PrivacyPage />;
     }
 
     if (path === "/my-courses") {

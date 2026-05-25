@@ -8,6 +8,8 @@ public record CompanyRegisterRequest(
         @NotBlank @Email String contactEmail,
         String managerFullName,
         @NotBlank String password,
-        String description
+        String description,
+        String inn,
+        String ogrn
 ) {
 }

@@ -29,13 +29,13 @@ public class OrganizationService {
     public List<OrganizationDto> list(String type) {
         if (type == null || type.isBlank()) {
             return jdbc.query("""
-                    SELECT id, name, type, status, description, created_at
+                    SELECT id, name, type, status, description, inn, ogrn, created_at
                     FROM organization.organizations
                     ORDER BY created_at DESC
                     """, (rs, rowNum) -> mapOrganization(rs));
         }
         return jdbc.query("""
-                SELECT id, name, type, status, description, created_at
+                SELECT id, name, type, status, description, inn, ogrn, created_at
                 FROM organization.organizations
                 WHERE type = ?
                 ORDER BY created_at DESC
@@ -72,10 +72,15 @@ public class OrganizationService {
                         ? "Компания зарегистрировалась на платформе"
                         : request.description()
         ));
+        // Store INN and OGRN if provided
+        if (request.inn() != null || request.ogrn() != null) {
+            jdbc.update("UPDATE organization.organizations SET inn = ?, ogrn = ?, updated_at = now() WHERE id = ?",
+                    request.inn(), request.ogrn(), organization.id());
+        }
         var managerId = UUID.randomUUID();
         jdbc.update("""
                         INSERT INTO identity.users (id, email, password_hash, full_name, role, organization_id)
-                        VALUES (?, ?, ?, ?, 'COMPANY_MANAGER', ?)
+                        VALUES (?, ?, ?, ?, 'PARTNER_MANAGER', ?)
                         """,
                 managerId,
                 request.contactEmail().toLowerCase(),
@@ -84,7 +89,7 @@ public class OrganizationService {
                         ? "Менеджер " + request.companyName()
                         : request.managerFullName(),
                 organization.id());
-        addMember(organization.id(), new MemberCreateRequest(managerId, "COMPANY_MANAGER"));
+        addMember(organization.id(), new MemberCreateRequest(managerId, "PARTNER_MANAGER"));
         events.publish("organization.company_registered", Map.of(
                 "organizationId", organization.id().toString(),
                 "managerUserId", managerId.toString()
@@ -94,7 +99,7 @@ public class OrganizationService {
 
     public OrganizationDto get(UUID id) {
         var rows = jdbc.query("""
-                SELECT id, name, type, status, description, created_at
+                SELECT id, name, type, status, description, inn, ogrn, created_at
                 FROM organization.organizations
                 WHERE id = ?
                 """, (rs, rowNum) -> mapOrganization(rs), id);
@@ -128,7 +133,7 @@ public class OrganizationService {
                 FROM identity.users
                 WHERE organization_id = ?
                   AND lower(email) = lower(?)
-                  AND role IN ('COMPANY_MANAGER', 'PARTNER_MANAGER', 'ADMIN')
+                  AND role IN ('PARTNER_MANAGER', 'ADMIN')
                 """, request.organizationId(), request.contactEmail());
         if (managers == 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Partner request contact must be an organization manager");
@@ -178,12 +183,12 @@ public class OrganizationService {
             jdbc.update("""
                             UPDATE organization.organization_members
                             SET role = 'PARTNER_MANAGER'
-                            WHERE organization_id = ? AND role = 'COMPANY_MANAGER'
+                            WHERE organization_id = ? AND role = 'PARTNER_MANAGER'
                             """, request.organizationId());
             jdbc.update("""
                             UPDATE identity.users
                             SET role = 'PARTNER_MANAGER', updated_at = now()
-                            WHERE organization_id = ? AND role = 'COMPANY_MANAGER'
+                            WHERE organization_id = ? AND role = 'PARTNER_MANAGER'
                             """, request.organizationId());
             organization = get(request.organizationId());
         }
@@ -206,7 +211,7 @@ public class OrganizationService {
                         UPDATE identity.users
                         SET organization_id = ?,
                             role = CASE
-                                WHEN ? IN ('COMPANY_MANAGER', 'PARTNER_MANAGER', 'MENTOR') THEN ?
+                                WHEN ? IN ('PARTNER_MANAGER', 'MENTOR') THEN ?
                                 ELSE 'CORPORATE_STUDENT'
                             END,
                             updated_at = now()
@@ -391,6 +396,8 @@ public class OrganizationService {
                 rs.getString("type"),
                 rs.getString("status"),
                 rs.getString("description"),
+                rs.getString("inn"),
+                rs.getString("ogrn"),
                 rs.getTimestamp("created_at").toInstant()
         );
     }

@@ -110,6 +110,9 @@ ALTER TABLE learning.courses ADD COLUMN IF NOT EXISTS content_object_key TEXT;
 ALTER TABLE learning.courses ADD COLUMN IF NOT EXISTS course_type VARCHAR(64) NOT NULL DEFAULT 'PUBLIC';
 ALTER TABLE learning.courses ADD COLUMN IF NOT EXISTS has_certificate BOOLEAN NOT NULL DEFAULT FALSE;
 
+ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS inn VARCHAR(12);
+ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS ogrn VARCHAR(15);
+
 CREATE TABLE IF NOT EXISTS learning.lessons (
     id UUID PRIMARY KEY,
     course_id UUID NOT NULL REFERENCES learning.courses(id) ON DELETE CASCADE,

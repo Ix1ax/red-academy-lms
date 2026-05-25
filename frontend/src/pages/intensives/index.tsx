@@ -375,10 +375,8 @@ export function IntensiveDetailsPage({ intensiveId, intensives, session }: { int
   const canManage = Boolean(session && intensive && canManageIntensive(session, intensive));
   const pendingApplications = (details?.applications ?? []).filter((item) => item.status === "PENDING");
   const decidedApplications = (details?.applications ?? []).filter((item) => item.status !== "PENDING");
-  // Managers/admins/mentors see all stages; regular users only see stages that have opened.
-  const visibleStages = (details?.stages ?? []).filter((s) =>
-    canManage || canSeeTasks || new Date(s.startsAt).getTime() <= now
-  );
+  // All stages are always visible (program preview); task content is gated separately.
+  const visibleStages = details?.stages ?? [];
   const nextStage = (details?.stages ?? []).find((s) => new Date(s.startsAt).getTime() > now);
   const activeStage = visibleStages.find((s) => s.id === activeStageId) ?? visibleStages[0];
 

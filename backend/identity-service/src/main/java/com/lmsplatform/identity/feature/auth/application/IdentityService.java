@@ -71,6 +71,27 @@ public class IdentityService {
                 """, (rs, rowNum) -> toDto(mapUser(rs)), normalized, normalized);
     }
 
+    public UserDto updateProfile(String authorization, UpdateProfileRequest request) {
+        var userId = jwtTokens.requireUserId(authorization);
+        var user = findUserById(userId);
+        var newFullName = (request.fullName() != null && !request.fullName().isBlank())
+                ? request.fullName().trim() : user.fullName();
+        if (request.newPassword() != null && !request.newPassword().isBlank()) {
+            if (request.currentPassword() == null || !passwordEncoder.matches(request.currentPassword(), user.passwordHash())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Неверный текущий пароль");
+            }
+            if (request.newPassword().length() < 8) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Новый пароль должен содержать минимум 8 символов");
+            }
+            jdbc.update("UPDATE identity.users SET full_name = ?, password_hash = ?, updated_at = now() WHERE id = ?",
+                    newFullName, passwordEncoder.encode(request.newPassword()), userId);
+        } else {
+            jdbc.update("UPDATE identity.users SET full_name = ?, updated_at = now() WHERE id = ?",
+                    newFullName, userId);
+        }
+        return toDto(findUserById(userId));
+    }
+
     private UserSession sessionFor(UserRecord user) {
         return new UserSession(toDto(user), jwtTokens.accessToken(user), jwtTokens.refreshToken(user));
     }
