@@ -2,6 +2,7 @@ package com.lmsplatform.organization.feature.organization.application;
 
 import com.lmsplatform.organization.feature.organization.domain.*;
 import com.lmsplatform.organization.shared.messaging.EventPublisher;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -29,13 +30,13 @@ public class OrganizationService {
     public List<OrganizationDto> list(String type) {
         if (type == null || type.isBlank()) {
             return jdbc.query("""
-                    SELECT id, name, type, status, description, inn, ogrn, created_at
+                    SELECT id, name, type, status, description, inn, ogrn, created_at, doc_inn_id, doc_egrul_id, doc_charter_id, doc_poa_id
                     FROM organization.organizations
                     ORDER BY created_at DESC
                     """, (rs, rowNum) -> mapOrganization(rs));
         }
         return jdbc.query("""
-                SELECT id, name, type, status, description, inn, ogrn, created_at
+                SELECT id, name, type, status, description, inn, ogrn, created_at, doc_inn_id, doc_egrul_id, doc_charter_id, doc_poa_id
                 FROM organization.organizations
                 WHERE type = ?
                 ORDER BY created_at DESC
@@ -78,17 +79,23 @@ public class OrganizationService {
                     request.inn(), request.ogrn(), organization.id());
         }
         var managerId = UUID.randomUUID();
-        jdbc.update("""
-                        INSERT INTO identity.users (id, email, password_hash, full_name, role, organization_id)
-                        VALUES (?, ?, ?, ?, 'PARTNER_MANAGER', ?)
-                        """,
-                managerId,
-                request.contactEmail().toLowerCase(),
-                passwordEncoder.encode(request.password()),
-                request.managerFullName() == null || request.managerFullName().isBlank()
-                        ? "Менеджер " + request.companyName()
-                        : request.managerFullName(),
-                organization.id());
+        try {
+            jdbc.update("""
+                            INSERT INTO identity.users (id, email, password_hash, full_name, role, organization_id)
+                            VALUES (?, ?, ?, ?, 'PARTNER_MANAGER', ?)
+                            """,
+                    managerId,
+                    request.contactEmail().toLowerCase(),
+                    passwordEncoder.encode(request.password()),
+                    request.managerFullName() == null || request.managerFullName().isBlank()
+                            ? "Менеджер " + request.companyName()
+                            : request.managerFullName(),
+                    organization.id());
+        } catch (DataIntegrityViolationException e) {
+            // Roll back the organization creation by deleting it
+            jdbc.update("DELETE FROM organization.organizations WHERE id = ?", organization.id());
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Этот email уже зарегистрирован");
+        }
         addMember(organization.id(), new MemberCreateRequest(managerId, "PARTNER_MANAGER"));
         events.publish("organization.company_registered", Map.of(
                 "organizationId", organization.id().toString(),
@@ -99,7 +106,7 @@ public class OrganizationService {
 
     public OrganizationDto get(UUID id) {
         var rows = jdbc.query("""
-                SELECT id, name, type, status, description, inn, ogrn, created_at
+                SELECT id, name, type, status, description, inn, ogrn, created_at, doc_inn_id, doc_egrul_id, doc_charter_id, doc_poa_id
                 FROM organization.organizations
                 WHERE id = ?
                 """, (rs, rowNum) -> mapOrganization(rs), id);
@@ -398,8 +405,25 @@ public class OrganizationService {
                 rs.getString("description"),
                 rs.getString("inn"),
                 rs.getString("ogrn"),
-                rs.getTimestamp("created_at").toInstant()
+                rs.getTimestamp("created_at").toInstant(),
+                rs.getObject("doc_inn_id", UUID.class),
+                rs.getObject("doc_egrul_id", UUID.class),
+                rs.getObject("doc_charter_id", UUID.class),
+                rs.getObject("doc_poa_id", UUID.class)
         );
+    }
+
+    public OrganizationDto updateDocuments(UUID organizationId, String docType, UUID fileId) {
+        String column = switch (docType) {
+            case "inn" -> "doc_inn_id";
+            case "egrul" -> "doc_egrul_id";
+            case "charter" -> "doc_charter_id";
+            case "poa" -> "doc_poa_id";
+            default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown document type: " + docType);
+        };
+        jdbc.update("UPDATE organization.organizations SET " + column + " = ?, updated_at = now() WHERE id = ?",
+                fileId, organizationId);
+        return get(organizationId);
     }
 
     private PartnerRequestDto mapPartnerRequest(ResultSet rs) throws SQLException {

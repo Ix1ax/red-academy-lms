@@ -1,6 +1,7 @@
 package com.lmsplatform.identity.feature.auth.application;
 
 import com.lmsplatform.identity.feature.auth.domain.*;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,12 +29,16 @@ public class IdentityService {
 
     public UserSession register(RegisterRequest request) {
         var id = UUID.randomUUID();
-        jdbc.update("""
-                        INSERT INTO identity.users (id, email, password_hash, full_name, role, organization_id)
-                        VALUES (?, ?, ?, ?, ?, ?)
-                        """,
-                id, request.email().toLowerCase(Locale.ROOT), passwordEncoder.encode(request.password()),
-                request.fullName(), "STUDENT", null);
+        try {
+            jdbc.update("""
+                            INSERT INTO identity.users (id, email, password_hash, full_name, role, organization_id)
+                            VALUES (?, ?, ?, ?, ?, ?)
+                            """,
+                    id, request.email().toLowerCase(Locale.ROOT), passwordEncoder.encode(request.password()),
+                    request.fullName(), "STUDENT", null);
+        } catch (DataIntegrityViolationException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Этот email уже зарегистрирован");
+        }
         return sessionFor(findUserByEmail(request.email()));
     }
 

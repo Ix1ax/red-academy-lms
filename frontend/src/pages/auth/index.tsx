@@ -286,8 +286,13 @@ function StudentWizard({ onBack, onSessionChange }: { onBack: () => void; onSess
       onSessionChange(session);
       toastSuccess("Аккаунт создан!", "Добро пожаловать на платформу.");
       navigate("/");
-    } catch {
-      toastError("Не удалось зарегистрироваться", "Проверьте данные и попробуйте снова.");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "";
+      if (msg.includes("уже зарегистрирован") || msg.includes("CONFLICT") || msg.includes("409")) {
+        toastError("Email уже занят", "Этот email уже зарегистрирован. Войдите или используйте другой адрес.");
+      } else {
+        toastError("Не удалось зарегистрироваться", msg || "Проверьте данные и попробуйте снова.");
+      }
     } finally { setLoading(false); }
   }
 
@@ -389,8 +394,13 @@ function CompanyWizard({ onBack, onSessionChange }: { onBack: () => void; onSess
       onSessionChange(session);
       toastSuccess("Компания зарегистрирована!", "Подайте заявку на партнёрство из профиля.");
       navigate("/profile");
-    } catch {
-      toastError("Не удалось зарегистрироваться", "Проверьте данные и попробуйте снова.");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "";
+      if (msg.includes("уже зарегистрирован") || msg.includes("CONFLICT") || msg.includes("409")) {
+        toastError("Email уже занят", "Этот email уже зарегистрирован. Используйте другой адрес или войдите в существующий аккаунт.");
+      } else {
+        toastError("Не удалось зарегистрировать компанию", msg || "Проверьте данные и попробуйте снова.");
+      }
     } finally { setLoading(false); }
   }
 

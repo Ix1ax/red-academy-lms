@@ -330,7 +330,7 @@ function HeroIllustration() {
             {[
               { v: "8", l: "Уроков" },
               { v: "2", l: "Курса" },
-              { v: "1", l: "Серт." },
+              { v: "74%", l: "Прогресс" },
             ].map(({ v, l }) => (
               <div key={l} className="rounded-xl bg-white/5 py-2 text-center">
                 <p className="text-[16px] font-bold text-white">{v}</p>
@@ -360,10 +360,10 @@ function HeroIllustration() {
 
         {/* Floating notification bubble */}
         <div className="absolute -right-2 -top-2 flex items-center gap-2 rounded-2xl border border-white/12 bg-white/10 px-3 py-2 shadow-lg backdrop-blur-sm">
-          <div className="h-5 w-5 rounded-full bg-emerald-400/20 flex items-center justify-center">
-            <div className="h-2 w-2 rounded-full bg-emerald-400" />
+          <div className="h-5 w-5 rounded-full bg-primary/30 flex items-center justify-center">
+            <div className="h-2 w-2 rounded-full bg-primary" />
           </div>
-          <p className="text-[10px] font-medium text-white/80">Сертификат получен!</p>
+          <p className="text-[10px] font-medium text-white/80">Новый этап открыт!</p>
         </div>
       </div>
     </div>

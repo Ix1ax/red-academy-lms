@@ -44,6 +44,14 @@ public class OrganizationController {
         return organizations.get(id);
     }
 
+    record UpdateDocumentRequest(String docType, UUID fileId) {}
+
+    @PatchMapping("/{id}/documents")
+    public OrganizationDto updateDocuments(@PathVariable("id") UUID id,
+                                           @RequestBody UpdateDocumentRequest request) {
+        return organizations.updateDocuments(id, request.docType(), request.fileId());
+    }
+
     // ─── Partner requests ────────────────────────────────────────────────────
 
     @PostMapping("/partner-requests")

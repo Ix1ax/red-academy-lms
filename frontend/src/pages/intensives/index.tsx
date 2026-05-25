@@ -19,6 +19,7 @@ import {
   ShieldCheck,
   Timer,
   Trophy,
+  UserCheck,
   UserRound,
   UsersRound,
   X,
@@ -244,6 +245,9 @@ export function IntensiveDetailsPage({ intensiveId, intensives, session }: { int
   const [pendingReviewId, setPendingReviewId] = useState("");
   const [reviews, setReviews] = useState<Record<string, { score: string; comment: string }>>({});
   const [now, setNow] = useState(() => Date.now());
+  const [mentorSearch, setMentorSearch] = useState("");
+  const [mentorResults, setMentorResults] = useState<Array<{ id: string; fullName: string; email: string }>>([]);
+  const [addingMentorId, setAddingMentorId] = useState("");
 
   useEffect(() => {
     apiRequest<IntensiveDetails>(`/api/intensives/${intensiveId}`)
@@ -347,6 +351,32 @@ export function IntensiveDetailsPage({ intensiveId, intensives, session }: { int
     } finally { setPendingParticipantId(""); }
   }
 
+  async function searchMentors(query: string) {
+    setMentorSearch(query);
+    if (query.length < 2) { setMentorResults([]); return; }
+    try {
+      const users = await apiRequest<Array<{ id: string; fullName: string; email: string; role: string }>>(`/api/users/search?q=${encodeURIComponent(query)}`);
+      setMentorResults(users.filter((u) => u.role === "MENTOR"));
+    } catch { setMentorResults([]); }
+  }
+
+  async function assignMentor(userId: string) {
+    if (!intensive || addingMentorId) return;
+    setAddingMentorId(userId);
+    try {
+      await apiRequest(`/api/intensives/${intensive.id}/managers`, {
+        method: "POST",
+        body: JSON.stringify({ userId, organizationId: null, role: "MENTOR" }),
+      });
+      await loadDetails();
+      setMentorSearch("");
+      setMentorResults([]);
+      toastSuccess("Ментор назначен");
+    } catch (e) {
+      toastError("Не удалось назначить ментора", e instanceof Error ? e.message : undefined);
+    } finally { setAddingMentorId(""); }
+  }
+
   async function reviewSubmission(submissionId: string) {
     if (pendingReviewId) return;
     const draft = reviews[submissionId] ?? { score: "100", comment: "" };
@@ -370,9 +400,10 @@ export function IntensiveDetailsPage({ intensiveId, intensives, session }: { int
   const isActiveParticipant = participant?.status === "ACTIVE";
   const isEliminated = participant?.status === "ELIMINATED";
   const hasApplied = Boolean(application && ["PENDING", "APPROVED"].includes(application.status));
-  const canSeeTasks = Boolean(isActiveParticipant || session?.user.role === "MENTOR" || session?.user.role === "PARTNER_MANAGER" || session?.user.role === "ADMIN");
+  const isMentorHere = Boolean(session && (details?.mentorUserIds ?? []).includes(session.user.id));
+  const canSeeTasks = Boolean(isActiveParticipant || isMentorHere || session?.user.role === "PARTNER_MANAGER" || session?.user.role === "ADMIN");
   const canSubmit = Boolean(isActiveParticipant && canApplyToIntensive(session!));
-  const canManage = Boolean(session && intensive && canManageIntensive(session, intensive));
+  const canManage = Boolean(session && intensive && (canManageIntensive(session, intensive) || isMentorHere));
   const pendingApplications = (details?.applications ?? []).filter((item) => item.status === "PENDING");
   const decidedApplications = (details?.applications ?? []).filter((item) => item.status !== "PENDING");
   // All stages are always visible (program preview); task content is gated separately.
@@ -695,6 +726,71 @@ export function IntensiveDetailsPage({ intensiveId, intensives, session }: { int
                 <p className="rounded-xl bg-surface p-4 text-[13px] text-muted">Участников пока нет. Одобрите первую заявку.</p>
               )}
             </div>
+
+            {/* Mentor assignment — only for real managers, not for mentors themselves */}
+            {canManageIntensive(session!, intensive!) && (
+              <div className="mt-5 border-t border-line pt-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <UserCheck size={15} className="text-muted" />
+                  <h3 className="text-[13px] font-semibold text-ink">Менторы</h3>
+                </div>
+
+                {/* Assigned mentors */}
+                {(details?.mentorUserIds ?? []).length > 0 && (
+                  <div className="mb-3 grid gap-1.5">
+                    {(details?.mentorUserIds ?? []).map((uid) => {
+                      const u = [...(details?.rating ?? []), ...(details?.applications ?? [])].find((x) => x.userId === uid);
+                      return (
+                        <div key={uid} className="flex items-center gap-2 rounded-xl bg-amber-50 border border-amber-200 px-3 py-2">
+                          <div className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-amber-100 text-amber-700 text-[10px] font-bold">М</div>
+                          <span className="text-[12px] font-medium text-ink truncate">{u?.fullName || u?.email || uid.slice(0, 8)}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Search + add mentor */}
+                <div className="relative">
+                  <input
+                    className="h-9 w-full rounded-xl border border-line bg-white px-3 text-[12px] outline-none transition focus:border-primary"
+                    placeholder="Поиск ментора по имени или email..."
+                    value={mentorSearch}
+                    onChange={(e) => searchMentors(e.target.value)}
+                  />
+                  {mentorResults.length > 0 && (
+                    <div className="absolute left-0 right-0 top-10 z-20 overflow-hidden rounded-xl border border-line bg-white shadow-card">
+                      {mentorResults.map((u) => (
+                        <button
+                          key={u.id}
+                          onClick={() => assignMentor(u.id)}
+                          disabled={!!addingMentorId || (details?.mentorUserIds ?? []).includes(u.id)}
+                          className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition hover:bg-surface disabled:opacity-50"
+                        >
+                          <div className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-amber-50 text-amber-700 text-[11px] font-bold">
+                            {u.fullName?.[0]?.toUpperCase() ?? "М"}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-[12px] font-semibold text-ink truncate">{u.fullName}</p>
+                            <p className="text-[11px] text-muted truncate">{u.email}</p>
+                          </div>
+                          {(details?.mentorUserIds ?? []).includes(u.id) ? (
+                            <span className="ml-auto text-[10px] text-emerald-600 font-semibold shrink-0">Назначен</span>
+                          ) : addingMentorId === u.id ? (
+                            <span className="ml-auto text-[10px] text-muted shrink-0">...</span>
+                          ) : (
+                            <span className="ml-auto text-[10px] text-primary font-semibold shrink-0">+ Добавить</span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {mentorSearch.length >= 2 && mentorResults.length === 0 && (
+                    <p className="mt-2 text-[11px] text-muted">Пользователей с ролью «Ментор» не найдено</p>
+                  )}
+                </div>
+              </div>
+            )}
           </aside>
         </div>
       )}
@@ -710,6 +806,7 @@ type IntensiveDetails = {
   rating: Array<{ id: string; userId: string; githubUrl?: string | null; score: number; status: string; email?: string | null; fullName?: string | null }>;
   applications?: Array<{ id: string; userId: string; githubUrl?: string | null; status: string; email?: string | null; fullName?: string | null }>;
   submissions?: Array<{ id: string; taskId: string; userId: string; githubUrl?: string | null; answerText?: string | null; status: string; score?: number | null; submittedAt: string; stageTitle?: string | null; email?: string | null; fullName?: string | null; reviewerComment?: string | null }>;
+  mentorUserIds?: string[];
 };
 
 type IntensiveStage = {

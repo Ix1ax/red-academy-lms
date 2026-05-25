@@ -49,7 +49,7 @@ public class IntensiveService {
                 registrationDeadline, request.coverUrl(), request.participantLimit());
         createStages(id, request.startsAt(), request.endsAt(), request.stages());
         for (var managerUserId : managerUserIds(request)) {
-                addManager(id, new IntensiveManagerCreateRequest(managerUserId, request.organizationId()));
+                addManager(id, new IntensiveManagerCreateRequest(managerUserId, request.organizationId(), "INTENSIVE_MANAGER"));
         }
         events.publish("intensive.created", Map.of("intensiveId", id.toString()));
         return findIntensive(id);
@@ -80,7 +80,7 @@ public class IntensiveService {
         jdbc.update("DELETE FROM learning.intensive_managers WHERE intensive_id = ?", id);
         createStages(id, request.startsAt(), request.endsAt(), request.stages());
         for (var managerUserId : managerUserIds(request)) {
-                addManager(id, new IntensiveManagerCreateRequest(managerUserId, request.organizationId()));
+                addManager(id, new IntensiveManagerCreateRequest(managerUserId, request.organizationId(), "INTENSIVE_MANAGER"));
         }
         events.publish("intensive.updated", Map.of("intensiveId", id.toString()));
         return findIntensive(id);
@@ -120,7 +120,8 @@ public class IntensiveService {
                 rs.getTimestamp("starts_at").toInstant(),
                 rs.getTimestamp("ends_at").toInstant()
         ), id);
-        return new IntensiveDetailsDto(intensive, stages, rating(id), applications(id), submissions(id));
+        var mentorUserIds = jdbc.query("SELECT user_id FROM learning.intensive_managers WHERE intensive_id = ? AND role = 'MENTOR' AND status = 'ACTIVE'", (rs, rowNum) -> rs.getObject("user_id", UUID.class), id);
+        return new IntensiveDetailsDto(intensive, stages, rating(id), applications(id), submissions(id), mentorUserIds);
     }
 
     public ApplicationDto apply(UUID intensiveId, ApplicationRequest request) {
@@ -265,16 +266,18 @@ public class IntensiveService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Manager userId is required");
         }
         var intensive = findIntensive(intensiveId);
+        var assignedRole = (request.role() != null && !request.role().isBlank()) ? request.role() : "INTENSIVE_MANAGER";
+        // Mentors can be from outside the organization; managers must belong to it
         var organizationId = request.organizationId() == null ? intensive.organizationId() : request.organizationId();
-        if (organizationId == null || !organizationId.equals(intensive.organizationId())) {
+        if (!"MENTOR".equals(assignedRole) && (organizationId == null || !organizationId.equals(intensive.organizationId()))) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Manager must belong to the organization running the intensive");
         }
         var id = UUID.randomUUID();
         jdbc.update("""
                         INSERT INTO learning.intensive_managers (id, intensive_id, user_id, organization_id, role, status)
-                        VALUES (?, ?, ?, ?, 'INTENSIVE_MANAGER', 'ACTIVE')
-                        ON CONFLICT (intensive_id, user_id) DO UPDATE SET status = 'ACTIVE'
-                        """, id, intensiveId, request.userId(), organizationId);
+                        VALUES (?, ?, ?, ?, ?, 'ACTIVE')
+                        ON CONFLICT (intensive_id, user_id) DO UPDATE SET role = EXCLUDED.role, status = 'ACTIVE'
+                        """, id, intensiveId, request.userId(), organizationId, assignedRole);
         events.publish("intensive.manager_assigned", Map.of(
                 "intensiveId", intensiveId.toString(),
                 "userId", request.userId().toString()
@@ -282,7 +285,7 @@ public class IntensiveService {
         return managers(intensiveId).stream()
                 .filter(manager -> manager.userId().equals(request.userId()))
                 .findFirst()
-                .orElse(new IntensiveManagerDto(id, intensiveId, request.userId(), organizationId, "INTENSIVE_MANAGER", "ACTIVE"));
+                .orElse(new IntensiveManagerDto(id, intensiveId, request.userId(), organizationId, assignedRole, "ACTIVE"));
     }
 
     public ParticipantDto kickParticipant(UUID intensiveId, UUID participantId, KickParticipantRequest request) {

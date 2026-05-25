@@ -112,6 +112,10 @@ ALTER TABLE learning.courses ADD COLUMN IF NOT EXISTS has_certificate BOOLEAN NO
 
 ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS inn VARCHAR(12);
 ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS ogrn VARCHAR(15);
+ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS doc_inn_id UUID;
+ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS doc_egrul_id UUID;
+ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS doc_charter_id UUID;
+ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS doc_poa_id UUID;
 
 CREATE TABLE IF NOT EXISTS learning.lessons (
     id UUID PRIMARY KEY,

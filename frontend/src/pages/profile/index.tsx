@@ -1,6 +1,7 @@
 import { apiRequest } from "@/shared/api/client";
+import { apiUrl } from "@/shared/api/config";
 import type { Session } from "@/shared/auth/session";
-import { persistSession } from "@/shared/auth/session";
+import { getAccessToken } from "@/shared/auth/session";
 import { applicationStatusLabel } from "@/shared/lib/labels";
 import { toastError, toastSuccess } from "@/shared/ui/toast";
 import {
@@ -8,6 +9,7 @@ import {
   Building2,
   CheckCircle2,
   Clock3,
+  Download,
   Edit2,
   Eye,
   EyeOff,
@@ -17,11 +19,12 @@ import {
   Save,
   Send,
   ShieldCheck,
+  Upload,
   UserCheck,
   UserRound,
   X,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 type PartnerRequest = {
@@ -53,6 +56,10 @@ type Organization = {
   description?: string | null;
   inn?: string | null;
   ogrn?: string | null;
+  docInnId?: string | null;
+  docEgrulId?: string | null;
+  docCharterId?: string | null;
+  docPoaId?: string | null;
 };
 
 // ─── Inline text field ────────────────────────────────────────────────────────
@@ -114,6 +121,109 @@ function StatusBox({ icon, title, text, tone }: { icon: React.ReactNode; title: 
     <div className={`mt-4 rounded-2xl p-4 ${color}`}>
       <div className="flex items-center gap-2 font-semibold">{icon}{title}</div>
       <p className="mt-2 text-[13px] leading-5">{text}</p>
+    </div>
+  );
+}
+
+// ─── DocUploadSlot ────────────────────────────────────────────────────────────
+
+function DocUploadSlot({
+  name,
+  desc,
+  docType,
+  fileId,
+  organizationId,
+  onUploaded,
+}: {
+  name: string;
+  desc: string;
+  docType: string;
+  fileId?: string | null;
+  organizationId: string;
+  onUploaded: (updated: Organization) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  async function handleFile(file: File) {
+    setUploading(true);
+    try {
+      // 1. Upload the file to /api/files
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("accessLevel", "PRIVATE");
+      const token = getAccessToken();
+      const uploadRes = await fetch(`${apiUrl}/api/files`, {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: formData,
+      });
+      if (!uploadRes.ok) throw new Error("Ошибка загрузки файла");
+      const uploaded = await uploadRes.json() as { id: string };
+
+      // 2. Link file to organization
+      const org = await apiRequest<Organization>(`/api/organizations/${organizationId}/documents`, {
+        method: "PATCH",
+        body: JSON.stringify({ docType, fileId: uploaded.id }),
+      });
+      onUploaded(org);
+      toastSuccess("Документ загружен", name);
+    } catch (e) {
+      toastError("Не удалось загрузить", e instanceof Error ? e.message : undefined);
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  const hasFile = !!fileId;
+
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-line bg-white p-3 text-left">
+      <input
+        ref={inputRef}
+        type="file"
+        accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+        className="hidden"
+        onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = ""; }}
+      />
+      <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg ${hasFile ? "bg-emerald-50 text-emerald-600" : "bg-surface text-muted"}`}>
+        <FileText size={16} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-[12px] font-semibold text-ink">{name}</p>
+        <p className="text-[11px] text-muted">{desc}</p>
+      </div>
+      <div className="flex shrink-0 items-center gap-1.5">
+        {hasFile && (
+          <a
+            href={`${apiUrl}/api/files/${fileId}/content`}
+            target="_blank"
+            rel="noreferrer"
+            className="grid h-7 w-7 place-items-center rounded-lg border border-line bg-white text-muted transition hover:border-primary/30 hover:text-primary"
+            title="Скачать"
+          >
+            <Download size={13} />
+          </a>
+        )}
+        <button
+          onClick={() => inputRef.current?.click()}
+          disabled={uploading}
+          className={`flex h-7 items-center gap-1 rounded-lg px-2.5 text-[11px] font-semibold transition disabled:opacity-50
+            ${hasFile ? "border border-line bg-white text-muted hover:border-primary/30 hover:text-ink" : "bg-primary text-white hover:opacity-90"}`}
+          title={hasFile ? "Заменить" : "Загрузить"}
+        >
+          {uploading ? (
+            <span className="flex items-center gap-1">
+              <svg className="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+              </svg>
+            </span>
+          ) : (
+            <><Upload size={11} />{hasFile ? "Заменить" : "Загрузить"}</>
+          )}
+        </button>
+      </div>
     </div>
   );
 }
@@ -361,28 +471,44 @@ export function ProfilePage({ session, onSessionChange }: { session: Session | n
             <div className="flex items-center gap-2 mb-4">
               <FileText size={15} className="text-muted" />
               <h3 className="text-[13px] font-semibold text-ink">Документы</h3>
+              <span className="ml-auto text-[11px] text-muted">PDF, DOC, JPG — до 10 МБ</span>
             </div>
             <div className="grid gap-2 sm:grid-cols-2">
-              {[
-                { name: "Свидетельство ИНН", desc: "Подтверждение налогового номера" },
-                { name: "Выписка из ЕГРЮЛ", desc: "Актуальная выписка (до 30 дней)" },
-                { name: "Устав организации", desc: "Действующая редакция устава" },
-                { name: "Доверенность", desc: "При наличии представителя" },
-              ].map(({ name, desc }) => (
-                <div key={name} className="flex items-center gap-3 rounded-xl border border-dashed border-line bg-surface p-3 text-left">
-                  <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white text-muted">
-                    <FileText size={15} />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[12px] font-semibold text-ink">{name}</p>
-                    <p className="text-[11px] text-muted">{desc}</p>
-                  </div>
-                  <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-600">Скоро</span>
-                </div>
-              ))}
+              <DocUploadSlot
+                name="Свидетельство ИНН"
+                desc="Подтверждение налогового номера"
+                docType="inn"
+                fileId={organization.docInnId}
+                organizationId={organization.id}
+                onUploaded={setOrganization}
+              />
+              <DocUploadSlot
+                name="Выписка из ЕГРЮЛ"
+                desc="Актуальная выписка (до 30 дней)"
+                docType="egrul"
+                fileId={organization.docEgrulId}
+                organizationId={organization.id}
+                onUploaded={setOrganization}
+              />
+              <DocUploadSlot
+                name="Устав организации"
+                desc="Действующая редакция устава"
+                docType="charter"
+                fileId={organization.docCharterId}
+                organizationId={organization.id}
+                onUploaded={setOrganization}
+              />
+              <DocUploadSlot
+                name="Доверенность"
+                desc="При наличии представителя"
+                docType="poa"
+                fileId={organization.docPoaId}
+                organizationId={organization.id}
+                onUploaded={setOrganization}
+              />
             </div>
             <p className="mt-3 text-[11px] text-muted">
-              Загрузка документов будет доступна в ближайшем обновлении. Пока предоставьте их администратору по запросу.
+              Загруженные документы видны только администратору платформы.
             </p>
           </div>
         </SectionCard>
@@ -450,34 +576,65 @@ export function ProfilePage({ session, onSessionChange }: { session: Session | n
               <h2 className="text-[15px] font-semibold text-ink">Партнёрство</h2>
             </div>
 
-            {session?.user.role === "PARTNER_MANAGER" ? (
+            {isPartnerManager && organization?.type === "PARTNER" ? (
+              /* ── Approved partner ── */
               <StatusBox icon={<CheckCircle2 size={18} />} title="Партнёрство одобрено" text="Вашей организации открыт кабинет партнёра и студия создания курсов." tone="success" />
-            ) : currentRequest ? (
+            ) : currentRequest && currentRequest.status === "PENDING" ? (
+              /* ── Request is pending review ── */
+              <StatusBox
+                icon={<Clock3 size={18} />}
+                title="Заявка на рассмотрении"
+                text="Ожидайте решения администратора. Мы уведомим вас о результате."
+                tone="warning"
+              />
+            ) : currentRequest && currentRequest.status === "APPROVED" ? (
+              /* ── Approved via request (role not yet updated — prompt to re-login) ── */
+              <StatusBox
+                icon={<CheckCircle2 size={18} />}
+                title="Партнёрство одобрено"
+                text="Перезайдите в систему, чтобы роль и доступы обновились."
+                tone="success"
+              />
+            ) : currentRequest && (currentRequest.status === "REJECTED" || currentRequest.status === "REWORK") ? (
+              /* ── Rejected or needs rework — show reason + resubmit form ── */
               <div>
                 <StatusBox
-                  icon={currentRequest.status === "APPROVED" ? <CheckCircle2 size={18} /> : <Clock3 size={18} />}
-                  title={
-                    currentRequest.status === "APPROVED" ? "Партнёрство одобрено" :
-                    currentRequest.status === "REJECTED" ? "Заявка отклонена" :
-                    currentRequest.status === "REWORK" ? "Заявка возвращена на доработку" :
-                    `Заявка: ${applicationStatusLabel(currentRequest.status)}`
-                  }
-                  text={
-                    currentRequest.status === "APPROVED" ? "После следующего входа роль и доступы будут обновлены." :
-                    currentRequest.status === "REJECTED" ? "Администратор отклонил заявку." :
-                    currentRequest.status === "REWORK" ? "Дополните описание и подайте новую заявку." :
-                    "Ожидайте решения администратора."
-                  }
-                  tone={currentRequest.status === "APPROVED" ? "success" : currentRequest.status === "REJECTED" ? "error" : "warning"}
+                  icon={<Clock3 size={18} />}
+                  title={currentRequest.status === "REJECTED" ? "Заявка отклонена" : "Заявка возвращена на доработку"}
+                  text={currentRequest.status === "REJECTED"
+                    ? "Администратор отклонил заявку. Вы можете подать повторную заявку с исправленными данными."
+                    : "Администратор вернул заявку на доработку. Внесите правки и отправьте снова."}
+                  tone={currentRequest.status === "REJECTED" ? "error" : "warning"}
                 />
                 {currentRequest.reviewReason && (
                   <div className="mt-3 rounded-2xl border border-line bg-surface p-3">
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted mb-1">Комментарий</p>
-                    <p className="text-[13px] text-ink">{currentRequest.reviewReason}</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted mb-1">Комментарий администратора</p>
+                    <p className="text-[13px] text-ink leading-5">{currentRequest.reviewReason}</p>
                   </div>
                 )}
+                <div className="mt-4 grid gap-3">
+                  <p className="text-[13px] text-muted">Исправьте описание и подайте повторную заявку:</p>
+                  <label className="grid gap-1.5 text-[13px] font-medium text-ink">
+                    Описание партнёрской программы
+                    <textarea
+                      className="min-h-24 rounded-xl border border-line px-3 py-2 text-[13px] outline-none transition focus:border-primary"
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      placeholder="Исправленное описание с учётом комментария..."
+                    />
+                  </label>
+                  <button
+                    onClick={submitPartnerRequest}
+                    disabled={submittingPartnerRequest}
+                    className="inline-flex h-10 w-fit items-center gap-2 rounded-xl bg-primary px-4 text-[13px] font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <Send size={14} />
+                    {submittingPartnerRequest ? "Отправляю..." : "Подать повторно"}
+                  </button>
+                </div>
               </div>
             ) : session?.user.organizationId ? (
+              /* ── Has company but no request yet (or PARTNER_MANAGER with CORPORATE_CLIENT type) ── */
               <div className="mt-4 grid gap-3">
                 <p className="text-[13px] leading-5 text-muted">
                   Подайте заявку на партнёрство. После одобрения компания получит партнёрский статус и отдельный кабинет.
