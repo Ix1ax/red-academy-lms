@@ -1,5 +1,6 @@
 import type { Course } from "@/entities/course/model/types";
 import type { Intensive } from "@/entities/intensive/model/types";
+import { Component, type ReactNode } from "react";
 import { AdminPage } from "@/pages/admin";
 import { AuthPage, type RegisterKind } from "@/pages/auth";
 import { CompanyPage } from "@/pages/company";
@@ -38,6 +39,28 @@ import {
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 
+class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
+  state = { error: null };
+  static getDerivedStateFromError(error: Error) { return { error }; }
+  render() {
+    if (this.state.error) {
+      return (
+        <main className="flex min-h-screen items-center justify-center bg-background p-6">
+          <div className="max-w-lg rounded-3xl border border-red-200 bg-white p-8 shadow-panel">
+            <h1 className="text-xl font-bold text-primary">Что-то пошло не так</h1>
+            <p className="mt-2 text-sm text-muted">Произошла ошибка при отображении страницы. Попробуйте обновить или перейти на другую страницу.</p>
+            <pre className="mt-4 overflow-auto rounded-xl bg-surface p-4 text-xs text-ink">{String(this.state.error)}</pre>
+            <button onClick={() => { this.setState({ error: null }); window.location.href = "/"; }} className="mt-4 inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-medium text-white">
+              На главную
+            </button>
+          </div>
+        </main>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 const navItems: Array<{ path: string; label: string; icon: typeof LayoutDashboard; roles?: Role[] }> = [
   { path: "/", label: "Главная", icon: LayoutDashboard },
   { path: "/courses", label: "Курсы", icon: Library },
@@ -62,6 +85,10 @@ const emptyStats: PlatformStats = {
 };
 
 export function App() {
+  return <ErrorBoundary><AppInner /></ErrorBoundary>;
+}
+
+function AppInner() {
   const { path } = useRoute();
   const [session, setSessionState] = useState<Session | null>(() => loadSession());
   const coursePath = session?.user.organizationId ? `/api/courses?organizationId=${session.user.organizationId}` : "/api/courses";

@@ -998,16 +998,26 @@ function starterItems(): ContentItem[] {
   return [folder, blankLongread(folder.id, 1), blankTest(folder.id, 2)];
 }
 
+function generateId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    try { return crypto.randomUUID(); } catch { /* fall through */ }
+  }
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
+  });
+}
+
 function blankFolder(position: number): ContentItem {
-  return { id: crypto.randomUUID(), parentId: null, type: "FOLDER", title: `Модуль ${position}`, htmlContent: null, testSchema: null, estimatedMinutes: 5, position };
+  return { id: generateId(), parentId: null, type: "FOLDER", title: `Модуль ${position}`, htmlContent: null, testSchema: null, estimatedMinutes: 5, position };
 }
 
 function blankLongread(parentId: string | null, position: number): ContentItem {
-  return { id: crypto.randomUUID(), parentId, type: "LONGREAD", title: "Материал", htmlContent: "<h2>Заголовок</h2><p>Напишите материал урока.</p><ul><li>Первый пункт</li><li>Второй пункт</li></ul>", testSchema: null, estimatedMinutes: 20, position };
+  return { id: generateId(), parentId, type: "LONGREAD", title: "Материал", htmlContent: "<h2>Заголовок</h2><p>Напишите материал урока.</p><ul><li>Первый пункт</li><li>Второй пункт</li></ul>", testSchema: null, estimatedMinutes: 20, position };
 }
 
 function blankTest(parentId: string | null, position: number): ContentItem {
-  return { id: crypto.randomUUID(), parentId, type: "TEST", title: "Тест", htmlContent: null, testSchema: { questions: [blankQuestion()] }, estimatedMinutes: 10, position };
+  return { id: generateId(), parentId, type: "TEST", title: "Тест", htmlContent: null, testSchema: { questions: [blankQuestion()] }, estimatedMinutes: 10, position };
 }
 
 function blankQuestion(): TestQuestion {
@@ -1026,7 +1036,7 @@ function normalizeItems(items: ContentItem[]) {
   if (!items?.length) return starterItems();
   return items.map((item, index) => ({
     ...item,
-    id: item.id ?? crypto.randomUUID(),
+    id: item.id ?? generateId(),
     parentId: item.parentId ?? null,
     htmlContent: item.type === "LONGREAD" && item.htmlContent ? normalizeLongreadContent(item.htmlContent) : item.htmlContent,
     estimatedMinutes: item.estimatedMinutes ?? 15,
@@ -1121,7 +1131,7 @@ function fixedThreeStages(stages: IntensiveStageForm[]) {
 
 function blankStage(position: number): IntensiveStageForm {
   return {
-    id: crypto.randomUUID(),
+    id: generateId(),
     startsAt: "",
     endsAt: "",
     title: `Этап ${position}`,
