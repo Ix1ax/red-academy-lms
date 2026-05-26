@@ -37,11 +37,11 @@ type OrgData = {
   docPoaId?: string | null;
 };
 
-const DOC_TYPES: { key: keyof OrgData; label: string; hint: string }[] = [
-  { key: "docInnId", label: "Свидетельство ИНН", hint: "PDF, до 10 МБ" },
-  { key: "docEgrulId", label: "Выписка из ЕГРЮЛ", hint: "PDF, до 10 МБ" },
-  { key: "docCharterId", label: "Устав организации", hint: "PDF, до 10 МБ" },
-  { key: "docPoaId", label: "Доверенность", hint: "PDF, до 10 МБ" },
+const DOC_TYPES: { key: keyof OrgData; apiType: string; label: string; hint: string }[] = [
+  { key: "docInnId", apiType: "inn", label: "Свидетельство ИНН", hint: "PDF, до 10 МБ" },
+  { key: "docEgrulId", apiType: "egrul", label: "Выписка из ЕГРЮЛ", hint: "PDF, до 10 МБ" },
+  { key: "docCharterId", apiType: "charter", label: "Устав организации", hint: "PDF, до 10 МБ" },
+  { key: "docPoaId", apiType: "poa", label: "Доверенность", hint: "PDF, до 10 МБ" },
 ];
 
 export function PartnerPage({
@@ -276,7 +276,7 @@ export function PartnerPage({
                 label={doc.label}
                 hint={doc.hint}
                 fileId={orgData[doc.key] as string | null | undefined}
-                docType={doc.key as string}
+                docType={doc.apiType}
                 onUpdate={updateDoc}
               />
             ))}

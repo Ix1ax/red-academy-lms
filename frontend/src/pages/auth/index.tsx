@@ -608,14 +608,23 @@ export function AuthPage({
       <BrandPanel />
       <div className="flex items-center justify-center bg-white px-6 py-12 sm:px-10">
         <div className="w-full max-w-[440px]">
-          {/* Mobile logo */}
-          <div className="mb-8 flex items-center gap-3 lg:hidden">
-            <div className="grid h-10 w-10 place-items-center rounded-xl bg-red-gradient shadow-red-sm">
-              <GraduationCap size={20} className="text-white" />
-            </div>
-            <div>
-              <p className="text-[15px] font-bold text-ink">РедАкадемия</p>
-              <p className="text-[11px] text-muted">Образовательная платформа</p>
+          {/* Mobile logo + back button */}
+          <div className="mb-8 lg:hidden">
+            <button
+              onClick={() => navigate("/")}
+              className="mb-4 inline-flex items-center gap-1.5 text-[13px] font-medium text-muted transition hover:text-primary"
+            >
+              <ArrowLeft size={15} />
+              На главную
+            </button>
+            <div className="flex items-center gap-3">
+              <div className="grid h-10 w-10 place-items-center rounded-xl bg-red-gradient shadow-red-sm">
+                <GraduationCap size={20} className="text-white" />
+              </div>
+              <div>
+                <p className="text-[15px] font-bold text-ink">РедАкадемия</p>
+                <p className="text-[11px] text-muted">Образовательная платформа</p>
+              </div>
             </div>
           </div>
 
