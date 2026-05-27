@@ -20,6 +20,7 @@ export type Session = {
 };
 
 export const sessionStorageKey = "lms-session";
+export const sessionChangeEvent = "lms-session-change";
 
 export const roleLabels: Record<Role, string> = {
   STUDENT: "Пользователь",
@@ -44,10 +45,12 @@ export function loadSession(): Session | null {
 export function persistSession(session: Session | null) {
   if (session) {
     localStorage.setItem(sessionStorageKey, JSON.stringify(session));
+    window.dispatchEvent(new CustomEvent(sessionChangeEvent, { detail: session }));
     return;
   }
 
   localStorage.removeItem(sessionStorageKey);
+  window.dispatchEvent(new CustomEvent(sessionChangeEvent, { detail: null }));
 }
 
 export function getAccessToken() {

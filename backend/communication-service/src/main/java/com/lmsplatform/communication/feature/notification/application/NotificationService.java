@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -20,28 +21,27 @@ public class NotificationService {
     }
 
     public List<NotificationDto> list(UUID userId, UUID organizationId) {
+        if (userId == null && organizationId == null) {
+            return List.of();
+        }
+        var conditions = new ArrayList<String>();
+        var args = new ArrayList<Object>();
         if (userId != null) {
-            return jdbc.query("""
-                    SELECT id, user_id, organization_id, title, message, type, read_at, created_at
-                    FROM communication.notifications
-                    WHERE user_id = ?
-                    ORDER BY created_at DESC
-                    """, (rs, rowNum) -> mapNotification(rs), userId);
+            conditions.add("user_id = ?");
+            args.add(userId);
         }
         if (organizationId != null) {
-            return jdbc.query("""
-                    SELECT id, user_id, organization_id, title, message, type, read_at, created_at
-                    FROM communication.notifications
-                    WHERE organization_id = ?
-                    ORDER BY created_at DESC
-                    """, (rs, rowNum) -> mapNotification(rs), organizationId);
+            conditions.add("organization_id = ?");
+            args.add(organizationId);
         }
+
         return jdbc.query("""
                 SELECT id, user_id, organization_id, title, message, type, read_at, created_at
                 FROM communication.notifications
+                WHERE %s
                 ORDER BY created_at DESC
                 LIMIT 100
-                """, (rs, rowNum) -> mapNotification(rs));
+                """.formatted(String.join(" OR ", conditions)), (rs, rowNum) -> mapNotification(rs), args.toArray());
     }
 
     public NotificationDto create(NotificationCreateRequest request) {

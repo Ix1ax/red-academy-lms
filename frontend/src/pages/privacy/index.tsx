@@ -88,7 +88,7 @@ export function PrivacyPage() {
     <div className="mx-auto max-w-3xl">
       <div className="mb-6">
         <button
-          onClick={() => navigate(-1 as unknown as string)}
+          onClick={() => navigate(-1)}
           className="inline-flex items-center gap-1.5 text-[13px] font-medium text-muted transition hover:text-ink"
         >
           <ArrowLeft size={14} />

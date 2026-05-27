@@ -223,16 +223,8 @@ public class CourseService {
         var items = new ArrayList<>(content.items());
         items.add(item);
         saveContent(courseId, new CourseContentSaveRequest(items));
-
-        var lessonId = UUID.randomUUID();
-        jdbc.update("""
-                        INSERT INTO learning.lessons (id, course_id, parent_id, item_type, title, content, test_schema, estimated_minutes, position)
-                        VALUES (?, ?, ?, ?, ?, ?, ?::jsonb, ?, ?)
-                        """, lessonId, courseId, request.parentId(), normalizeCourseItemType(request.type()),
-                request.title(), request.htmlContent() == null ? request.content() : request.htmlContent(), request.testSchema() == null ? null : request.testSchema().toString(),
-                request.estimatedMinutes() == null ? 15 : request.estimatedMinutes(), request.position());
-        return new LessonDto(lessonId, courseId, request.parentId(), normalizeCourseItemType(request.type()), request.title(),
-                request.content(), request.htmlContent(), request.testSchema(), request.estimatedMinutes() == null ? 15 : request.estimatedMinutes(), request.position());
+        return new LessonDto(item.id(), courseId, item.parentId(), item.type(), item.title(),
+                request.content(), item.htmlContent(), item.testSchema(), item.estimatedMinutes(), item.position());
     }
 
     public EnrollmentDto enroll(UUID courseId, EnrollmentRequest request) {

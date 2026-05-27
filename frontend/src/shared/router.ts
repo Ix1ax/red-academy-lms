@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-export function navigate(path: string) {
+export function navigate(path: string | number) {
+  if (typeof path === "number") {
+    if (window.history.length > 1) {
+      window.history.go(path);
+      return;
+    }
+    path = "/";
+  }
   if (window.location.pathname === path) return;
   window.history.pushState(null, "", path);
   window.dispatchEvent(new PopStateEvent("popstate"));
@@ -15,7 +22,7 @@ export function useRoute() {
     return () => window.removeEventListener("popstate", onPopState);
   }, []);
 
-  const go = useCallback((nextPath: string) => navigate(nextPath), []);
+  const go = useCallback((nextPath: string | number) => navigate(nextPath), []);
 
   return useMemo(() => ({ path, navigate: go }), [go, path]);
 }

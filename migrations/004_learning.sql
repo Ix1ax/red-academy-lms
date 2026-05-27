@@ -123,7 +123,7 @@ CREATE TABLE IF NOT EXISTS learning.intensive_managers (
     id UUID PRIMARY KEY,
     intensive_id UUID NOT NULL REFERENCES learning.intensives(id) ON DELETE CASCADE,
     user_id UUID NOT NULL,
-    organization_id UUID NOT NULL,
+    organization_id UUID,
     role VARCHAR(64) NOT NULL DEFAULT 'INTENSIVE_MANAGER',
     status VARCHAR(64) NOT NULL DEFAULT 'ACTIVE',
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),

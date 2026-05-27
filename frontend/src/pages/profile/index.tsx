@@ -107,7 +107,7 @@ function EditField({
 
 function SectionCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`rounded-2xl border border-line bg-white shadow-card ${className}`}>
+    <div className={`min-w-0 overflow-hidden rounded-2xl border border-line bg-white shadow-card ${className}`}>
       {children}
     </div>
   );
@@ -336,14 +336,14 @@ export function ProfilePage({ session, onSessionChange }: { session: Session | n
 
       {/* ── Personal info card ── */}
       <SectionCard>
-        <div className="flex items-start justify-between gap-3 p-5 sm:p-6">
-          <div className="flex items-center gap-4">
+        <div className="flex min-w-0 flex-col gap-3 p-5 sm:flex-row sm:items-start sm:justify-between sm:p-6">
+          <div className="flex min-w-0 items-center gap-3 sm:gap-4">
             <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-primary-light text-primary">
               <UserRound size={26} />
             </div>
-            <div>
-              <h1 className="text-[20px] font-bold tracking-tight text-ink">{session?.user.fullName ?? "Гость"}</h1>
-              <p className="mt-0.5 text-[13px] text-muted">{session?.user.email}</p>
+            <div className="min-w-0">
+              <h1 className="truncate text-[20px] font-bold tracking-tight text-ink">{session?.user.fullName ?? "Гость"}</h1>
+              <p className="mt-0.5 truncate text-[13px] text-muted">{session?.user.email}</p>
               <span className="mt-1.5 inline-block rounded-full bg-surface px-2.5 py-0.5 text-[11px] font-semibold text-muted">
                 {roleLabel[session?.user.role ?? ""] ?? session?.user.role}
               </span>
@@ -351,7 +351,7 @@ export function ProfilePage({ session, onSessionChange }: { session: Session | n
           </div>
           <button
             onClick={() => { setEditName(session?.user.fullName ?? ""); setEditingProfile(!editingProfile); setChangingPassword(false); }}
-            className={`shrink-0 flex items-center gap-1.5 rounded-xl border px-3 py-2 text-[12px] font-semibold transition ${editingProfile ? "border-primary/30 bg-primary/5 text-primary" : "border-line bg-surface text-muted hover:border-primary/30 hover:text-ink"}`}
+            className={`flex h-9 w-fit max-w-full shrink-0 items-center gap-1.5 rounded-xl border px-3 py-2 text-[12px] font-semibold transition ${editingProfile ? "border-primary/30 bg-primary/5 text-primary" : "border-line bg-surface text-muted hover:border-primary/30 hover:text-ink"}`}
           >
             {editingProfile ? <><X size={13} />Отмена</> : <><Edit2 size={13} />Редактировать</>}
           </button>
@@ -388,18 +388,18 @@ export function ProfilePage({ session, onSessionChange }: { session: Session | n
       <SectionCard>
         <button
           onClick={() => { setChangingPassword(!changingPassword); setEditingProfile(false); }}
-          className="flex w-full items-center justify-between gap-3 p-5 sm:p-6"
+          className="flex w-full min-w-0 items-center justify-between gap-3 p-5 text-left sm:p-6"
         >
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-center gap-3">
             <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-surface text-muted">
               <KeyRound size={17} />
             </div>
-            <div className="text-left">
+            <div className="min-w-0 text-left">
               <p className="text-[14px] font-semibold text-ink">Безопасность</p>
               <p className="text-[12px] text-muted">Изменить пароль</p>
             </div>
           </div>
-          <div className={`rounded-xl border px-3 py-1.5 text-[12px] font-semibold transition ${changingPassword ? "border-primary/30 bg-primary/5 text-primary" : "border-line text-muted"}`}>
+          <div className={`shrink-0 rounded-xl border px-2.5 py-1.5 text-[12px] font-semibold transition sm:px-3 ${changingPassword ? "border-primary/30 bg-primary/5 text-primary" : "border-line text-muted"}`}>
             {changingPassword ? "Свернуть" : "Изменить"}
           </div>
         </button>

@@ -13,9 +13,11 @@ import { MentorPage } from "@/pages/mentor";
 import { PartnerPage } from "@/pages/partner";
 import { PrivacyPage } from "@/pages/privacy";
 import { ProfilePage } from "@/pages/profile";
+import { apiRequest } from "@/shared/api/client";
 import { useApiData } from "@/shared/api/use-api-data";
-import { hasRole, loadSession, persistSession, roleLabels, type Role, type Session } from "@/shared/auth/session";
+import { hasRole, loadSession, persistSession, roleLabels, sessionChangeEvent, type Role, type Session } from "@/shared/auth/session";
 import { navigate, routeParam, useRoute } from "@/shared/router";
+import { NotificationCenter } from "@/shared/ui/NotificationCenter";
 import { ToastViewport } from "@/shared/ui/toast";
 import {
   BookOpen,
@@ -101,14 +103,20 @@ function AppInner() {
     setSessionState(next);
   };
 
+  useEffect(() => {
+    function onSessionChange(event: Event) {
+      setSessionState((event as CustomEvent<Session | null>).detail ?? loadSession());
+    }
+
+    window.addEventListener(sessionChangeEvent, onSessionChange);
+    return () => window.removeEventListener(sessionChangeEvent, onSessionChange);
+  }, []);
+
   // Refresh session user data on app start to pick up role/org changes made by admin
   useEffect(() => {
     const stored = loadSession();
     if (!stored) return;
-    fetch("/api/users/me", {
-      headers: { Authorization: `Bearer ${stored.accessToken}` },
-    })
-      .then((r) => (r.ok ? r.json() : null))
+    apiRequest<Session["user"]>("/api/users/me")
       .then((user) => {
         if (!user) return;
         const refreshed: Session = {
@@ -356,18 +364,19 @@ function AppHeader({
                 <span className="text-[13px] text-muted">{roleLabels[session.user.role]}</span>
               </div>
               {/* Mobile: show role chip */}
-              <div className="flex items-center gap-1.5 rounded-xl border border-line bg-surface px-2 py-1.5 sm:hidden">
+              <div className="flex max-w-[112px] items-center gap-1.5 rounded-xl border border-line bg-surface px-2 py-1.5 sm:hidden">
                 <div className="grid h-5 w-5 place-items-center rounded-md bg-primary-light text-primary">
                   <UserRound size={11} />
                 </div>
-                <span className="text-[12px] font-medium text-ink">{roleLabels[session.user.role]}</span>
+                <span className="truncate text-[12px] font-medium text-ink">{roleLabels[session.user.role]}</span>
               </div>
+              <NotificationCenter session={session} />
               <button
                 onClick={() => onSessionChange(null)}
                 className="inline-flex h-8 items-center gap-1.5 rounded-xl bg-ink px-2.5 text-[12px] font-medium text-white transition-opacity hover:opacity-80 sm:h-9 sm:gap-2 sm:px-3 sm:text-[13px]"
               >
                 <LogOut size={13} />
-                <span className="hidden xs:inline sm:inline">Выйти</span>
+                <span className="hidden min-[380px]:inline sm:inline">Выйти</span>
               </button>
             </>
           ) : (

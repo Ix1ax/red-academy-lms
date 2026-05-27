@@ -12,6 +12,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -246,6 +247,7 @@ public class OrganizationService {
                         """, reason, id);
         events.publish("organization.partner_rejected", Map.of(
                 "requestId", id.toString(),
+                "organizationId", request.organizationId() == null ? "" : request.organizationId().toString(),
                 "reason", reason == null ? "" : reason
         ));
         return getPartnerRequest(id);
@@ -263,6 +265,7 @@ public class OrganizationService {
                         """, reason, id);
         events.publish("organization.partner_rework", Map.of(
                 "requestId", id.toString(),
+                "organizationId", request.organizationId() == null ? "" : request.organizationId().toString(),
                 "reason", reason == null ? "" : reason
         ));
         return getPartnerRequest(id);
@@ -289,7 +292,17 @@ public class OrganizationService {
                 JOIN organization.organizations o ON o.id = i.organization_id
                 WHERE i.id = ?
                 """, (rs, rowNum) -> mapInvite(rs), id);
-        return rows.get(0);
+        var invite = rows.get(0);
+        var event = new LinkedHashMap<String, Object>();
+        event.put("inviteId", id.toString());
+        event.put("organizationId", organizationId.toString());
+        event.put("email", invite.email());
+        var invitedUserId = findUserIdByEmail(invite.email());
+        if (invitedUserId != null) {
+            event.put("userId", invitedUserId.toString());
+        }
+        events.publish("organization.invite_created", event);
+        return invite;
     }
 
     public List<InviteDto> invitesForEmail(String email) {
@@ -338,7 +351,13 @@ public class OrganizationService {
                         SET status = 'ACCEPTED', accepted_at = now()
                         WHERE id = ?
                         """, inviteId);
-        return addMember(invite.organizationId(), new MemberCreateRequest(userId, invite.role()));
+        var member = addMember(invite.organizationId(), new MemberCreateRequest(userId, invite.role()));
+        events.publish("organization.invite_accepted", Map.of(
+                "inviteId", inviteId.toString(),
+                "organizationId", invite.organizationId().toString(),
+                "userId", userId.toString()
+        ));
+        return member;
     }
 
     private InviteDto mapInvite(ResultSet rs) throws SQLException {
@@ -394,6 +413,16 @@ public class OrganizationService {
     private int count(String sql, Object... args) {
         var result = jdbc.queryForObject(sql, Long.class, args);
         return result == null ? 0 : Math.toIntExact(result);
+    }
+
+    private UUID findUserIdByEmail(String email) {
+        var rows = jdbc.query("""
+                SELECT id
+                FROM identity.users
+                WHERE lower(email) = lower(?)
+                LIMIT 1
+                """, (rs, rowNum) -> rs.getObject("id", UUID.class), email);
+        return rows.isEmpty() ? null : rows.get(0);
     }
 
     private OrganizationDto mapOrganization(ResultSet rs) throws SQLException {
