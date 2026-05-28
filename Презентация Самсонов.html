@@ -1,0 +1,1772 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Защита диплома — Самсонов И. В. · РедАкадемия</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="deck-stage.js"></script>
+<script type="application/json" id="speaker-notes">
+[
+  "Здравствуйте. Меня зовут Самсонов Илья, группа 4-ИС2. Тема моего дипломного проекта — разработка платформы корпоративного обучения и проведения образовательных интенсивов. Руководитель — Ишкова Лариса Георгиевна, рецензент — Васильев Даниил Олегович. Расскажу, зачем нужна такая платформа, как она устроена, какие технологии использованы и какие результаты получены.",
+  "Тема актуальна, потому что дистанционное и смешанное обучение стало неотъемлемой частью работы и компаний, и учебных заведений. Сейчас учебные материалы хранятся в разных сервисах, прогресс отслеживается вручную, проверка заданий занимает часы, а разграничение прав между участниками реализовано неэффективно. Новизна работы в том, что в одной микросервисной платформе объединены и корпоративное обучение по организациям, и открытые образовательные интенсивы, и партнёрская публикация курсов. Практическая значимость — работающее веб-приложение, готовое к использованию в колледже, IT-компании, корпоративном образовательном центре.",
+  "Цель работы — разработать LMS-платформу на основе веб-технологий и микросервисной архитектуры, обеспечивающую публикацию курсов, прохождение уроков и тестов, регистрацию на интенсивы, проверку результатов и разграничение прав доступа. Задачи — от определения требований и выбора технологий до реализации модулей курсов, интенсивов, организаций, файлового хранилища, сертификатов и тестирования.",
+  "По обоснованию. Стек выбран осознанно. Java 17 и Spring Boot 3.3.5 — типизация и надёжная экосистема для REST API и работы с данными. React 18 с TypeScript и Vite — компонентный интерфейс, статическая типизация и быстрая сборка. PostgreSQL 16 — реляционная база с поддержкой JSONB. RabbitMQ — асинхронные события между сервисами. MinIO — S3-совместимое хранилище для файлов. Caddy — reverse-proxy с автоматическим TLS. Всё запускается одной командой через Docker Compose. Эксплуатационные затраты — нулевые: стек open-source, домен и сервер уже есть.",
+  "Архитектура микросервисная. Пять backend-сервисов: identity отвечает за пользователей и авторизацию, organization — за компании и партнёров, learning — за курсы, уроки, интенсивы и сертификаты, communication — за уведомления и файлы. API Gateway маршрутизирует запросы. Caddy на внешнем периметре терминирует HTTPS и проксирует трафик. Все инфраструктурные сервисы привязаны к 127.0.0.1, наружу открыты только 80 и 443 порты.",
+  "Технологический стек подобран под задачи каждого слоя. На бэкенде — Spring Boot и JdbcTemplate с параметризованными запросами. На фронтенде — React 18, TypeScript, Vite, Tailwind, lucide-react и framer-motion. Авторизация — JWT с подписанным access-токеном и refresh-токеном, пароли хешируются BCrypt. Для межсервисной коммуникации — REST через Gateway плюс события через RabbitMQ. Хранение файлов вынесено в MinIO, в базе остаются только метаданные.",
+  "Конструктивно база разделена на четыре схемы: identity, organization, learning и communication. Это соответствует микросервисной декомпозиции. Идентификаторы — UUID, для тестов и ответов пользователей используется JSONB, для уроков — иерархия через parent_id. Целостность обеспечивается внешними ключами, уникальными ограничениями и индексами: один пользователь не может дважды записаться на курс, одно активное приглашение в организацию — только одно.",
+  "Защита платформы строится на двух уровнях. На прикладном — JWT, ролевая модель, BCrypt для паролей, параметризованные SQL-запросы и серверная проверка прав на каждом защищённом endpoint. На инфраструктурном — изоляция сервисов в Docker-сети, внешний доступ только через Caddy, HTTPS с автоматическим Let's Encrypt, разделение секретов и кода через переменные окружения. Это базовый, но согласованный набор мер.",
+  "Экономически проект эффективен: лицензионные затраты — ноль, весь стек open-source. Эксплуатация — один сервер с Docker Compose, доступ через браузер. Трудозатраты разработки распределены между проектированием, бэкендом, фронтендом, инфраструктурой и тестированием. Окупаемость — за счёт замещения нескольких сторонних сервисов одной платформой и сокращения ручных операций при сопровождении обучения.",
+  "Ожидаемые результаты. Разработана работающая LMS-платформа, в которой реализованы все заявленные сценарии: регистрация, ролевая авторизация, каталог курсов, прохождение уроков и тестов, интенсивы с этапами и проверкой, выдача сертификатов, управление организациями и партнёрскими заявками. Архитектура поддерживает дальнейшее масштабирование. Цель дипломного проекта достигнута, задачи выполнены в полном объёме. Спасибо за внимание, готов ответить на ваши вопросы.",
+  "Источники: государственные стандарты ЕСКД и ЕСПД, официальная документация Spring Boot, React, PostgreSQL, Docker Compose, Caddy, MinIO, RabbitMQ, спецификации JWT (RFC 7519), материалы OWASP по безопасности веб-приложений и документация Moodle по концепциям LMS."
+]
+</script>
+<style>
+  :root {
+    --brand: #D9242F;
+    --brand-700: #B01821;
+    --brand-50: #FFEEEF;
+    --brand-100: #FCE0E2;
+    --hero: #1A0E11;
+    --hero-2: #2A1418;
+    --ink: #0F0A0B;
+    --ink-2: #4A3F42;
+    --ink-3: #8E8285;
+    --paper: #FAF6F6;
+    --card: #FFFFFF;
+    --line: rgba(15,10,11,0.10);
+    --line-soft: rgba(15,10,11,0.05);
+    --shadow-sm: 0 1px 0 rgba(15,10,11,0.04), 0 4px 12px -6px rgba(15,10,11,0.06);
+    --shadow: 0 1px 0 rgba(15,10,11,0.04), 0 16px 36px -18px rgba(15,10,11,0.10);
+    --shadow-hero: 0 1px 0 rgba(15,10,11,0.06), 0 24px 60px -24px rgba(15,10,11,0.32);
+
+    --pad-x: 96px;
+    --pad-y: 88px;
+    --radius-lg: 24px;
+    --radius-md: 18px;
+    --radius-sm: 12px;
+  }
+
+  html, body { margin: 0; padding: 0; background: #0a0506; }
+  deck-stage { font-family: 'Onest', system-ui, sans-serif; color: var(--ink); }
+  section {
+    background: var(--paper);
+    padding: var(--pad-y) var(--pad-x);
+    box-sizing: border-box;
+    overflow: hidden;
+    position: relative;
+    font-feature-settings: "ss01", "cv02";
+  }
+  h1, h2, h3, h4, p, ul, ol, dl { margin: 0; }
+  ul { list-style: none; padding: 0; }
+
+  /* ===== Logo lockup ===== */
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .logo .mark {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    background: var(--brand);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 28px;
+    letter-spacing: -0.02em;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.18) inset, 0 8px 20px -8px rgba(217,36,47,0.5);
+  }
+  .logo .wordmark {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+  }
+  .logo .wordmark .name {
+    font-size: 32px;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  .logo .wordmark .sub { display: none; }
+  .logo.on-dark .wordmark .name { color: #fff; }
+  .logo.on-dark .wordmark .sub { color: rgba(255,255,255,0.55); }
+
+  /* ===== Slide chrome ===== */
+  .chrome {
+    position: absolute;
+    inset: 56px var(--pad-x) auto var(--pad-x);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 44px;
+    padding: 0 22px;
+    background: var(--brand);
+    color: #fff;
+    font-size: 24px;
+    font-weight: 600;
+    border-radius: 999px;
+    letter-spacing: -0.005em;
+  }
+  .pill.ghost {
+    background: var(--card);
+    color: var(--ink);
+    border: 1px solid var(--line);
+  }
+  .pill .dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.9); }
+  .pill.ghost .dot { background: var(--brand); }
+  .pill.on-dark { background: var(--brand); }
+
+  /* ===== Footer ===== */
+  .footer {
+    position: absolute;
+    left: var(--pad-x);
+    right: var(--pad-x);
+    bottom: 44px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 24px;
+    color: var(--ink-3);
+  }
+  .footer .me { color: var(--ink-2); font-weight: 500; }
+
+  /* ===== Eyebrow / title ===== */
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--brand);
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: 0;
+  }
+  .eyebrow::before {
+    content: "";
+    width: 28px;
+    height: 2px;
+    background: var(--brand);
+    border-radius: 2px;
+  }
+  .h1 {
+    font-size: 72px;
+    font-weight: 700;
+    line-height: 1.04;
+    letter-spacing: -0.025em;
+    color: var(--ink);
+  }
+  .h1 .accent { color: var(--brand); }
+  .h2 {
+    font-size: 56px;
+    font-weight: 600;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  .h2 .accent { color: var(--brand); }
+  .lead {
+    font-size: 28px;
+    line-height: 1.4;
+    color: var(--ink-2);
+  }
+  .body { font-size: 26px; line-height: 1.45; color: var(--ink-2); }
+  .small { font-size: 24px; line-height: 1.4; color: var(--ink-3); }
+
+  /* ===== Common content body ===== */
+  .body-area {
+    padding-top: 168px;
+    padding-bottom: 116px;
+    height: 100%;
+    box-sizing: border-box;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    gap: 40px;
+  }
+  .head { display: flex; flex-direction: column; gap: 20px; max-width: 1520px; }
+
+  /* ============================================================
+     SLIDE 1 — Title
+  ============================================================ */
+  .s-title {
+    background: var(--paper);
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1.35fr 1fr;
+    grid-template-rows: 1fr;
+  }
+  .s-title .hero {
+    background:
+      radial-gradient(120% 80% at 0% 100%, #4a1a20 0%, transparent 55%),
+      radial-gradient(80% 60% at 100% 0%, #3a141a 0%, transparent 60%),
+      var(--hero);
+    color: #fff;
+    padding: 64px 72px;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    position: relative;
+    overflow: hidden;
+  }
+  .s-title .hero::after {
+    content: "";
+    position: absolute;
+    right: -120px;
+    bottom: -120px;
+    width: 460px;
+    height: 460px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(217,36,47,0.32) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .s-title .hero-top { display: flex; justify-content: space-between; align-items: center; }
+  .s-title .hero-tag {
+    display: inline-flex;
+    gap: 10px;
+    align-items: center;
+    height: 44px;
+    padding: 0 20px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    font-size: 24px;
+    font-weight: 500;
+    border: 1px solid rgba(255,255,255,0.12);
+  }
+  .s-title .hero-tag .ico { color: var(--brand); font-size: 24px; }
+  .s-title .hero-center {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 32px;
+    max-width: 900px;
+  }
+  .s-title .hero-headline {
+    font-size: 84px;
+    font-weight: 700;
+    line-height: 1.0;
+    letter-spacing: -0.035em;
+    color: #fff;
+  }
+  .s-title .hero-headline .accent {
+    color: var(--brand);
+    display: block;
+    margin-top: 6px;
+  }
+  .s-title .hero-lede {
+    font-size: 28px;
+    line-height: 1.4;
+    color: rgba(255,255,255,0.72);
+    max-width: 760px;
+  }
+  .s-title .hero-stats {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+  .s-title .hero-stat {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    padding: 16px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .s-title .hero-stat .v { font-size: 36px; font-weight: 600; color: #fff; line-height: 1; letter-spacing: -0.02em; }
+  .s-title .hero-stat .k { font-size: 24px; color: rgba(255,255,255,0.6); }
+
+  .s-title .meta {
+    background: var(--paper);
+    padding: 64px 72px;
+    display: grid;
+    grid-template-rows: auto auto 1fr auto;
+    gap: 36px;
+  }
+  .s-title .meta-top { display: flex; justify-content: space-between; align-items: center; }
+  .s-title .meta-counter {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 24px;
+    color: var(--ink-3);
+  }
+  .s-title .meta-counter b { color: var(--brand); font-weight: 600; font-size: 28px; }
+  .s-title .profile {
+    background: var(--card);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    padding: 36px 36px 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+  .s-title .profile-head { display: flex; align-items: center; gap: 22px; }
+  .s-title .avatar {
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    background: var(--brand);
+    color: #fff;
+    font-weight: 700;
+    font-size: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 20px -10px rgba(217,36,47,0.55);
+  }
+  .s-title .profile-info { display: flex; flex-direction: column; gap: 4px; }
+  .s-title .profile-info .name {
+    font-size: 30px;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+  }
+  .s-title .profile-info .role {
+    font-size: 24px;
+    color: var(--ink-3);
+  }
+  .s-title .profile-info .role .live {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #1f7a3a;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+
+  .s-title .roles {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .s-title .role-row {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 24px;
+    align-items: baseline;
+    padding: 16px 0;
+    border-top: 1px solid var(--line-soft);
+  }
+  .s-title .role-row:first-child { border-top: 0; }
+  .s-title .role-row .k {
+    font-size: 24px;
+    color: var(--ink-3);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 500;
+  }
+  .s-title .role-row .v {
+    font-size: 26px;
+    color: var(--ink);
+    font-weight: 500;
+    line-height: 1.25;
+  }
+  .s-title .meta-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--ink-3);
+    font-size: 24px;
+  }
+
+  /* ============================================================
+     SLIDE 2 — Актуальность / новизна / значимость
+  ============================================================ */
+  .three-up {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 28px;
+    align-content: start;
+  }
+  .three-up .card {
+    background: var(--card);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    padding: 36px 36px 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    position: relative;
+    overflow: hidden;
+  }
+  .three-up .card::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 6px;
+    height: 64px;
+    background: var(--brand);
+    border-radius: 0 4px 4px 0;
+  }
+  .three-up .tag {
+    align-self: flex-start;
+    background: var(--brand-50);
+    color: var(--brand);
+    font-size: 24px;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 999px;
+  }
+  .three-up h3 {
+    font-size: 36px;
+    font-weight: 600;
+    line-height: 1.15;
+    color: var(--ink);
+    letter-spacing: -0.015em;
+    flex: 1;
+  }
+  .three-up p {
+    font-size: 24px;
+    line-height: 1.45;
+    color: var(--ink-2);
+  }
+
+  /* ============================================================
+     SLIDE 3 — Цель и задачи
+  ============================================================ */
+  .goal {
+    background: var(--hero);
+    color: #fff;
+    border-radius: var(--radius-lg);
+    padding: 36px 40px;
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 32px;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 40px;
+  }
+  .goal::after {
+    content: "";
+    position: absolute;
+    right: -80px;
+    top: -80px;
+    width: 280px;
+    height: 280px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(217,36,47,0.32) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .goal .label {
+    font-size: 26px;
+    color: var(--brand);
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+  }
+  .goal .text {
+    font-size: 32px;
+    line-height: 1.28;
+    color: #fff;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    max-width: 1180px;
+  }
+  .tasks-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+  .task-card {
+    background: var(--card);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    padding: 24px 26px 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-height: 180px;
+  }
+  .task-card .num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--brand-50);
+    color: var(--brand);
+    font-weight: 700;
+    font-size: 24px;
+  }
+  .task-card .t {
+    font-size: 24px;
+    line-height: 1.35;
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  /* ============================================================
+     SLIDE 4 — ТЭО
+  ============================================================ */
+  .teo-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    align-items: stretch;
+  }
+  .teo-card {
+    background: var(--card);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    padding: 36px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+  .teo-card.dark {
+    background: var(--hero);
+    color: #fff;
+  }
+  .teo-card .heading {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .teo-card.dark .heading {
+    border-bottom-color: rgba(255,255,255,0.10);
+  }
+  .teo-card .heading .icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: var(--brand-50);
+    color: var(--brand);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 24px;
+  }
+  .teo-card.dark .heading .icon {
+    background: rgba(217,36,47,0.16);
+    color: var(--brand);
+  }
+  .teo-card .heading h3 {
+    font-size: 32px;
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .teo-card.dark .heading h3 { color: #fff; }
+  .teo-card dl {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 16px 28px;
+  }
+  .teo-card dt {
+    font-size: 24px;
+    color: var(--ink-3);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding-top: 2px;
+  }
+  .teo-card.dark dt { color: rgba(255,255,255,0.5); }
+  .teo-card dd {
+    margin: 0;
+    font-size: 26px;
+    color: var(--ink);
+    line-height: 1.36;
+  }
+  .teo-card.dark dd { color: rgba(255,255,255,0.92); }
+  .teo-card dd .strong { color: var(--brand); font-weight: 600; }
+
+  /* ============================================================
+     SLIDE 5 — Архитектура
+  ============================================================ */
+  .arch-diagram {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .arch-row {
+    display: grid;
+    gap: 16px;
+    position: relative;
+  }
+  .arch-row.lvl-1 { grid-template-columns: 1fr; }
+  .arch-row.lvl-2 { grid-template-columns: 1fr 1fr; }
+  .arch-row.lvl-4 { grid-template-columns: repeat(4, 1fr); }
+  .arch-row.lvl-5 { grid-template-columns: 1.4fr 1fr 1fr 1fr 1fr; }
+  .arch-box {
+    background: var(--card);
+    border-radius: var(--radius-md);
+    padding: 14px 22px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .arch-box.outer {
+    background: var(--hero);
+    color: #fff;
+  }
+  .arch-box.gateway {
+    background: var(--brand);
+    color: #fff;
+  }
+  .arch-box.svc {
+    border: 1.5px solid var(--brand);
+    background: var(--card);
+  }
+  .arch-box.svc .label { color: var(--brand); }
+  .arch-box.data {
+    background: var(--card);
+  }
+  .arch-box .label {
+    font-size: 24px;
+    color: var(--ink-3);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .arch-box.outer .label,
+  .arch-box.gateway .label { color: rgba(255,255,255,0.75); }
+  .arch-box .title-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .arch-box .name {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .arch-box.outer .name,
+  .arch-box.gateway .name { color: #fff; }
+  .arch-box .desc {
+    font-size: 24px;
+    color: var(--ink-2);
+    line-height: 1.4;
+  }
+  .arch-box.outer .desc { color: rgba(255,255,255,0.7); }
+  .arch-box.gateway .desc { color: rgba(255,255,255,0.85); }
+  .arch-box .tech {
+    font-size: 24px;
+    color: var(--brand);
+    font-weight: 600;
+  }
+  .arch-box.outer .tech { color: var(--brand); }
+
+  /* ============================================================
+     SLIDE 6 — Стек
+  ============================================================ */
+  .stack-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 18px;
+  }
+  .stack-tile {
+    background: var(--card);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    padding: 22px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+    overflow: hidden;
+  }
+  .stack-tile .pill-tag {
+    align-self: flex-start;
+    background: var(--brand-50);
+    color: var(--brand);
+    font-size: 24px;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 999px;
+  }
+  .stack-tile h4 {
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.14;
+    letter-spacing: -0.01em;
+  }
+  .stack-tile h4 .v { font-weight: 400; color: var(--ink-3); font-size: 24px; display: block; margin-top: 4px; }
+  .stack-tile p {
+    font-size: 24px;
+    color: var(--ink-2);
+    line-height: 1.42;
+    margin-top: auto;
+  }
+
+  /* ============================================================
+     SLIDE 7 — БД
+  ============================================================ */
+  .schema-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 22px;
+  }
+  .schema-card {
+    background: var(--card);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+  }
+  .schema-card .head {
+    background: var(--brand);
+    color: #fff;
+    padding: 22px 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .schema-card .head .name {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .schema-card .head .desc {
+    font-size: 24px;
+    color: rgba(255,255,255,0.82);
+  }
+  .schema-card ul { padding: 12px 0; }
+  .schema-card ul li {
+    padding: 9px 26px;
+    font-size: 24px;
+    color: var(--ink-2);
+    line-height: 1.32;
+    border-top: 1px solid var(--line-soft);
+    word-break: break-word;
+  }
+  .schema-card ul li:first-child { border-top: 0; }
+  .schema-card ul li.key {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .schema-card ul li.key::before {
+    content: "▸";
+    color: var(--brand);
+    margin-right: 8px;
+  }
+  .db-foot {
+    margin-top: 28px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+  }
+  .db-foot .item {
+    background: var(--brand-50);
+    border-radius: var(--radius-sm);
+    padding: 18px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .db-foot .k {
+    font-size: 24px;
+    color: var(--brand);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .db-foot .v {
+    font-size: 24px;
+    color: var(--ink);
+    line-height: 1.3;
+    font-weight: 500;
+  }
+
+  /* ============================================================
+     SLIDE 8 — Безопасность
+  ============================================================ */
+  .sec-cols {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 32px;
+    align-items: start;
+  }
+  .sec-list {
+    background: var(--card);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    padding: 8px 0;
+  }
+  .sec-list .row {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 24px;
+    align-items: center;
+    padding: 13px 32px;
+    border-top: 1px solid var(--line-soft);
+  }
+  .sec-list .row:first-child { border-top: 0; }
+  .sec-list .row .k {
+    font-size: 24px;
+    color: var(--brand);
+    font-weight: 700;
+    letter-spacing: -0.005em;
+  }
+  .sec-list .row .v {
+    font-size: 24px;
+    color: var(--ink);
+    line-height: 1.38;
+  }
+  .sec-side { display: flex; flex-direction: column; gap: 16px; }
+  .sec-card {
+    background: var(--card);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    padding: 20px 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    position: relative;
+    overflow: hidden;
+  }
+  .sec-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 4px;
+    height: 100%;
+    background: var(--brand);
+  }
+  .sec-card .k {
+    font-size: 24px;
+    color: var(--brand);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .sec-card .v {
+    font-size: 26px;
+    color: var(--ink);
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+  }
+  .sec-card .d {
+    font-size: 24px;
+    color: var(--ink-2);
+    line-height: 1.4;
+  }
+
+  /* ============================================================
+     SLIDE 9 — Экономика
+  ============================================================ */
+  .econ-cols {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap: 32px;
+    align-items: start;
+  }
+  .econ-card-big {
+    background: var(--card);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    padding: 36px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+  }
+  .econ-card-big h3 {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .bar-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .bar-row {
+    display: grid;
+    grid-template-columns: 260px 1fr 90px;
+    gap: 22px;
+    align-items: center;
+  }
+  .bar-row .k {
+    font-size: 24px;
+    color: var(--ink);
+    line-height: 1.25;
+  }
+  .bar-row .v {
+    font-size: 24px;
+    color: var(--ink);
+    text-align: right;
+    font-weight: 600;
+  }
+  .bar-track {
+    height: 14px;
+    background: var(--brand-50);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    background: var(--brand);
+    border-radius: 999px;
+  }
+  .econ-total {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 24px;
+    align-items: center;
+    padding-top: 18px;
+    border-top: 1px solid var(--line-soft);
+  }
+  .econ-total .k { font-size: 26px; color: var(--ink); font-weight: 600; }
+  .econ-total .v { font-size: 36px; color: var(--brand); font-weight: 700; letter-spacing: -0.02em; }
+
+  .econ-side { display: flex; flex-direction: column; gap: 18px; }
+  .econ-stat {
+    background: var(--card);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    padding: 26px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .econ-stat .k {
+    font-size: 24px;
+    color: var(--brand);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .econ-stat .v {
+    font-size: 36px;
+    color: var(--ink);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+  .econ-stat.dark { background: var(--hero); color: #fff; }
+  .econ-stat.dark .v { color: #fff; }
+  .econ-stat .d { font-size: 24px; color: var(--ink-2); line-height: 1.4; }
+  .econ-stat.dark .d { color: rgba(255,255,255,0.75); }
+
+  /* ============================================================
+     SLIDE 10 — Результаты
+  ============================================================ */
+  .res-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 28px;
+  }
+  .res-card {
+    background: var(--card);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    padding: 36px 40px;
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 28px;
+    align-items: start;
+  }
+  .res-card .n {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--brand);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 28px;
+  }
+  .res-card .body-c { display: flex; flex-direction: column; gap: 12px; }
+  .res-card h4 {
+    font-size: 30px;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.18;
+    letter-spacing: -0.01em;
+  }
+  .res-card p {
+    font-size: 24px;
+    color: var(--ink-2);
+    line-height: 1.42;
+  }
+
+  /* ============================================================
+     SLIDE 11 — Источники
+  ============================================================ */
+  .src-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+  }
+  .src-card {
+    background: var(--card);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    padding: 26px 32px;
+  }
+  .src-card .cat-h {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+  .src-card .cat-h .badge {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--brand-50);
+    color: var(--brand);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 24px;
+  }
+  .src-card .cat-h .name {
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: -0.005em;
+  }
+  .src-card ul li {
+    font-size: 24px;
+    color: var(--ink);
+    line-height: 1.32;
+    padding: 8px 0;
+    border-top: 1px solid var(--line-soft);
+  }
+  .src-card ul li:first-child { border-top: 0; }
+  .src-card ul li .meta { display: block; color: var(--ink-3); font-size: 24px; margin-top: 4px; }
+</style>
+</head>
+<body>
+<deck-stage width="1920" height="1080">
+
+  <!-- ============================================================
+       SLIDE 1 — Title
+  ============================================================ -->
+  <section class="s-title" data-screen-label="01 Титульный" data-om-validate="no_overflowing_text,no_overlapping_text,slide_sized_text">
+    <div class="hero">
+      <div class="hero-top">
+        <div class="logo on-dark">
+          <div class="mark">РЕД</div>
+          <div class="wordmark">
+            <div class="name">Академия</div>
+            <div class="sub">Образовательная платформа</div>
+          </div>
+        </div>
+        <div class="hero-tag">
+          <span class="ico">✦</span>
+          <span>Дипломный проект · 2026</span>
+        </div>
+      </div>
+      <div class="hero-center">
+        <h1 class="hero-headline">
+          Платформа корп. обучения<br>
+          и&nbsp;образовательных<br>
+          <span class="accent">интенсивов.</span>
+        </h1>
+        <p class="hero-lede">Единая LMS для индивидуальных пользователей, корпоративных клиентов, партнёрских программ и&nbsp;трёхэтапных интенсивов с&nbsp;проверкой заданий наставниками.</p>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat"><div class="v">4</div><div class="k">микросервиса</div></div>
+        <div class="hero-stat"><div class="v">16</div><div class="k">таблиц БД</div></div>
+        <div class="hero-stat"><div class="v">5</div><div class="k">ролей</div></div>
+        <div class="hero-stat"><div class="v">0&nbsp;₽</div><div class="k">лицензий</div></div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="meta-top">
+        <div class="meta-counter"><span>Слайд</span><b>01</b><span>/ 11</span></div>
+        <span class="small">09.02.07 · ИС и&nbsp;программирование</span>
+      </div>
+      <div class="profile">
+        <div class="profile-head">
+          <div class="avatar">С</div>
+          <div class="profile-info">
+            <div class="name">Самсонов Илья Валерьевич</div>
+            <div class="role">Группа 4-ИС2 · автор<span class="live"></span></div>
+          </div>
+        </div>
+        <div class="roles">
+          <div class="role-row">
+            <div class="k">Руководитель</div>
+            <div class="v">Ишкова&nbsp;Л.&nbsp;Г.</div>
+          </div>
+          <div class="role-row">
+            <div class="k">Рецензент</div>
+            <div class="v">Васильев&nbsp;Д.&nbsp;О.</div>
+          </div>
+          <div class="role-row">
+            <div class="k">Тема</div>
+            <div class="v">LMS-платформа «РедАкадемия»</div>
+          </div>
+          <div class="role-row">
+            <div class="k">Домен</div>
+            <div class="v">редакадемия.рф</div>
+          </div>
+        </div>
+      </div>
+      <div class="meta-footer">
+        <span>ГБПОУ «Тверской колледж им.&nbsp;А.&nbsp;Н.&nbsp;Коняева»</span>
+        <span>Тверь · 2026</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SLIDE 2 — Актуальность, новизна, значимость
+  ============================================================ -->
+  <section data-screen-label="02 Актуальность" data-om-validate="no_overflowing_text,no_overlapping_text,slide_sized_text">
+    <div class="chrome">
+      <div class="logo">
+        <div class="mark">РЕД</div>
+        <div class="wordmark"><div class="name">Академия</div><div class="sub">Образовательная платформа</div></div>
+      </div>
+      <div class="pill"><span class="dot"></span>02 / 11</div>
+    </div>
+    <div class="body-area">
+      <div class="head">
+        <div class="eyebrow">Актуальность, новизна, значимость</div>
+        <h2 class="h1">Учебные материалы разнесены<br>по сервисам, а&nbsp;контроль обучения<br>ведётся <span class="accent">вручную.</span></h2>
+      </div>
+      <div class="three-up">
+        <div class="card">
+          <span class="tag">Актуальность</span>
+          <h3>Фрагментация инструментов обучения</h3>
+          <p>Курсы хранятся в&nbsp;одних системах, проверка заданий — в&nbsp;других, прогресс — в&nbsp;таблицах. Контроль ручной, разграничение прав слабое.</p>
+        </div>
+        <div class="card">
+          <span class="tag">Новизна</span>
+          <h3>Корпоративное обучение + открытые интенсивы в&nbsp;одной системе</h3>
+          <p>Микросервисная LMS с&nbsp;ролевой моделью, организациями, партнёрскими заявками и&nbsp;публикацией курсов в&nbsp;едином контуре.</p>
+        </div>
+        <div class="card">
+          <span class="tag">Значимость</span>
+          <h3>Работающее веб-приложение для колледжа и&nbsp;IT-компании</h3>
+          <p>Централизованное хранение материалов, автоматизация прогресса, выдача сертификатов и&nbsp;снижение ручной нагрузки на&nbsp;кураторов.</p>
+        </div>
+      </div>
+    </div>
+    <div class="footer">
+      <span class="me">Самсонов И. В. · 4-ИС2</span>
+      <span>редакадемия.рф</span>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SLIDE 3 — Цель и задачи
+  ============================================================ -->
+  <section data-screen-label="03 Цель и задачи" data-om-validate="no_overflowing_text,no_overlapping_text,slide_sized_text">
+    <div class="chrome">
+      <div class="logo">
+        <div class="mark">РЕД</div>
+        <div class="wordmark"><div class="name">Академия</div><div class="sub">Образовательная платформа</div></div>
+      </div>
+      <div class="pill"><span class="dot"></span>03 / 11</div>
+    </div>
+    <div class="body-area">
+      <div class="head">
+        <div class="eyebrow">Цель и задачи проекта</div>
+      </div>
+      <div>
+        <div class="goal">
+          <div class="label">Цель</div>
+          <div class="text">Разработать образовательную LMS-платформу на&nbsp;основе веб-технологий и&nbsp;микросервисной архитектуры — с&nbsp;курсами, уроками, тестами, интенсивами, ролями и&nbsp;разграничением прав доступа.</div>
+        </div>
+        <div class="tasks-grid">
+          <div class="task-card"><span class="num">01</span><div class="t">Определить функциональные и&nbsp;нефункциональные требования</div></div>
+          <div class="task-card"><span class="num">02</span><div class="t">Выбрать технологии клиента, сервера и&nbsp;инфраструктуры</div></div>
+          <div class="task-card"><span class="num">03</span><div class="t">Спроектировать архитектуру и&nbsp;структуру базы данных</div></div>
+          <div class="task-card"><span class="num">04</span><div class="t">Реализовать модули курсов, интенсивов и&nbsp;организаций</div></div>
+          <div class="task-card"><span class="num">05</span><div class="t">Реализовать ролевую авторизацию и&nbsp;разграничение доступа</div></div>
+          <div class="task-card"><span class="num">06</span><div class="t">Разработать личный кабинет и&nbsp;студию управления контентом</div></div>
+          <div class="task-card"><span class="num">07</span><div class="t">Реализовать файловое хранилище, уведомления и&nbsp;сертификаты</div></div>
+          <div class="task-card"><span class="num">08</span><div class="t">Провести тестирование и&nbsp;проработать безопасность данных</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="footer">
+      <span class="me">Самсонов И. В. · 4-ИС2</span>
+      <span>редакадемия.рф</span>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SLIDE 4 — ТЭО
+  ============================================================ -->
+  <section data-screen-label="04 ТЭО" data-om-validate="no_overflowing_text,no_overlapping_text,slide_sized_text">
+    <div class="chrome">
+      <div class="logo">
+        <div class="mark">РЕД</div>
+        <div class="wordmark"><div class="name">Академия</div><div class="sub">Образовательная платформа</div></div>
+      </div>
+      <div class="pill"><span class="dot"></span>04 / 11</div>
+    </div>
+    <div class="body-area">
+      <div class="head">
+        <div class="eyebrow">Технико-экономическое обоснование</div>
+        <h2 class="h1">Пользователи, контент<br>и&nbsp;технологическая база.</h2>
+      </div>
+      <div class="teo-grid">
+        <div class="teo-card">
+          <div class="heading">
+            <div class="icon">A</div>
+            <h3>Исходные данные</h3>
+          </div>
+          <dl>
+            <dt>Пользователи</dt>
+            <dd>Студент, корп. сотрудник, партнёрский менеджер, наставник, администратор</dd>
+            <dt>Контент</dt>
+            <dd>Курсы, уроки (папки, лонгриды, тесты), интенсивы с&nbsp;этапами и&nbsp;заявками</dd>
+            <dt>Документы</dt>
+            <dd>Файлы организаций (ИНН, ЕГРЮЛ, устав, доверенность), материалы курсов</dd>
+            <dt>Развёртывание</dt>
+            <dd>Один сервер · Docker Compose · домен&nbsp;<span class="strong">редакадемия.рф</span></dd>
+          </dl>
+        </div>
+        <div class="teo-card dark">
+          <div class="heading">
+            <div class="icon">B</div>
+            <h3>Технологическая база</h3>
+          </div>
+          <dl>
+            <dt>Backend</dt>
+            <dd><span class="strong">Java 17 · Spring Boot 3.3.5</span> — JdbcTemplate, JJWT</dd>
+            <dt>Frontend</dt>
+            <dd><span class="strong">React 18 · TypeScript · Vite</span> — Tailwind, framer-motion</dd>
+            <dt>Данные</dt>
+            <dd><span class="strong">PostgreSQL 16 · Redis · RabbitMQ · MinIO</span></dd>
+            <dt>Инфраструктура</dt>
+            <dd><span class="strong">Docker Compose · Caddy</span> — TLS Let's Encrypt</dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+    <div class="footer">
+      <span class="me">Самсонов И. В. · 4-ИС2</span>
+      <span>редакадемия.рф</span>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SLIDE 5 — Архитектура
+  ============================================================ -->
+  <section data-screen-label="05 Архитектура" data-om-validate="no_overflowing_text,no_overlapping_text,slide_sized_text">
+    <div class="chrome">
+      <div class="logo">
+        <div class="mark">РЕД</div>
+        <div class="wordmark"><div class="name">Академия</div><div class="sub">Образовательная платформа</div></div>
+      </div>
+      <div class="pill"><span class="dot"></span>05 / 11</div>
+    </div>
+    <div class="body-area">
+      <div class="head">
+        <div class="eyebrow">Технологическая часть · архитектура</div>
+        <h2 class="h2">Reverse-proxy, Gateway и&nbsp;четыре микросервиса<br>в&nbsp;одной Docker-сети.</h2>
+      </div>
+      <div class="arch-diagram">
+        <div class="arch-row lvl-2">
+          <div class="arch-box outer">
+            <div class="label">Внешний контур</div>
+            <div class="title-row">
+              <div class="name">Caddy · reverse-proxy</div>
+              <div class="tech">HTTPS · Let's Encrypt</div>
+            </div>
+            <div class="desc">Терминирует TLS, маршрутизирует frontend и&nbsp;/api/* в&nbsp;Gateway. Единая точка входа извне.</div>
+          </div>
+          <div class="arch-box">
+            <div class="label">Клиентский слой</div>
+            <div class="title-row">
+              <div class="name">React SPA</div>
+              <div class="tech">TypeScript · Vite</div>
+            </div>
+            <div class="desc">Защищённые маршруты по&nbsp;ролям, каталог, обучение, студия контента, личный кабинет.</div>
+          </div>
+        </div>
+        <div class="arch-row lvl-1">
+          <div class="arch-box gateway">
+            <div class="label">API Gateway · Spring Cloud Gateway</div>
+            <div class="title-row">
+              <div class="name">Маршрутизация /api/*</div>
+              <div class="tech">CORS · единый префикс</div>
+            </div>
+          </div>
+        </div>
+        <div class="arch-row lvl-4">
+          <div class="arch-box svc">
+            <div class="label">identity-service</div>
+            <div class="name">Пользователи · JWT · роли</div>
+          </div>
+          <div class="arch-box svc">
+            <div class="label">organization-service</div>
+            <div class="name">Компании · партнёрские заявки</div>
+          </div>
+          <div class="arch-box svc">
+            <div class="label">learning-service</div>
+            <div class="name">Курсы · уроки · интенсивы</div>
+          </div>
+          <div class="arch-box svc">
+            <div class="label">communication-service</div>
+            <div class="name">Уведомления · файлы</div>
+          </div>
+        </div>
+        <div class="arch-row lvl-4">
+          <div class="arch-box data">
+            <div class="label">PostgreSQL 16</div>
+            <div class="desc">4 схемы · UUID · JSONB</div>
+          </div>
+          <div class="arch-box data">
+            <div class="label">Redis</div>
+            <div class="desc">Кэш и&nbsp;сессии</div>
+          </div>
+          <div class="arch-box data">
+            <div class="label">RabbitMQ</div>
+            <div class="desc">События между сервисами</div>
+          </div>
+          <div class="arch-box data">
+            <div class="label">MinIO · S3</div>
+            <div class="desc">Файлы и&nbsp;документы</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer">
+      <span class="me">Самсонов И. В. · 4-ИС2</span>
+      <span>Внутренние сервисы привязаны к 127.0.0.1 · снаружи только 80&nbsp;и&nbsp;443</span>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SLIDE 6 — Стек
+  ============================================================ -->
+  <section data-screen-label="06 Стек технологий" data-om-validate="no_overflowing_text,no_overlapping_text,slide_sized_text">
+    <div class="chrome">
+      <div class="logo">
+        <div class="mark">РЕД</div>
+        <div class="wordmark"><div class="name">Академия</div><div class="sub">Образовательная платформа</div></div>
+      </div>
+      <div class="pill"><span class="dot"></span>06 / 11</div>
+    </div>
+    <div class="body-area">
+      <div class="head">
+        <div class="eyebrow">Технологическая часть · стек</div>
+        <h2 class="h2">Каждый слой решает свою задачу<br>и&nbsp;работает независимо от&nbsp;соседних.</h2>
+      </div>
+      <div class="stack-grid">
+        <div class="stack-tile">
+          <span class="pill-tag">Backend</span>
+          <h4>Spring Boot 3.3.5<span class="v">Java 17 · JdbcTemplate</span></h4>
+          <p>REST API и&nbsp;бизнес-логика. Параметризованные запросы, централизованная обработка ошибок.</p>
+        </div>
+        <div class="stack-tile">
+          <span class="pill-tag">Frontend</span>
+          <h4>React 18 · TS<span class="v">Vite · Tailwind</span></h4>
+          <p>Компонентный интерфейс, статическая типизация, framer-motion, lucide-react.</p>
+        </div>
+        <div class="stack-tile">
+          <span class="pill-tag">Хранение</span>
+          <h4>PostgreSQL 16<span class="v">+ MinIO S3</span></h4>
+          <p>Реляционные данные и&nbsp;JSONB. Бинарные объекты — в&nbsp;отдельном хранилище.</p>
+        </div>
+        <div class="stack-tile">
+          <span class="pill-tag">События</span>
+          <h4>RabbitMQ<span class="v">+ Redis cache</span></h4>
+          <p>Асинхронные события между сервисами. Кэш горячих данных и&nbsp;сессий.</p>
+        </div>
+        <div class="stack-tile">
+          <span class="pill-tag">Безопасность</span>
+          <h4>JWT + BCrypt<span class="v">access · refresh</span></h4>
+          <p>Подписанный токен с&nbsp;ролью и&nbsp;organizationId. Хеширование паролей.</p>
+        </div>
+        <div class="stack-tile">
+          <span class="pill-tag">Шлюз</span>
+          <h4>API Gateway<span class="v">Spring Cloud</span></h4>
+          <p>Единая точка входа /api/*. Маршруты в&nbsp;4&nbsp;сервиса, CORS.</p>
+        </div>
+        <div class="stack-tile">
+          <span class="pill-tag">Reverse-proxy</span>
+          <h4>Caddy<span class="v">+ Let's Encrypt</span></h4>
+          <p>Терминирование HTTPS, автоматический выпуск TLS, проксирование frontend.</p>
+        </div>
+        <div class="stack-tile">
+          <span class="pill-tag">Инфраструктура</span>
+          <h4>Docker Compose<span class="v">один compose.yml</span></h4>
+          <p>Все контейнеры в&nbsp;одном файле. Воспроизводимый запуск и&nbsp;демонстрация.</p>
+        </div>
+      </div>
+    </div>
+    <div class="footer">
+      <span class="me">Самсонов И. В. · 4-ИС2</span>
+      <span>Open-source — 0&nbsp;₽ лицензий</span>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SLIDE 7 — БД
+  ============================================================ -->
+  <section data-screen-label="07 База данных" data-om-validate="no_overflowing_text,no_overlapping_text,slide_sized_text">
+    <div class="chrome">
+      <div class="logo">
+        <div class="mark">РЕД</div>
+        <div class="wordmark"><div class="name">Академия</div><div class="sub">Образовательная платформа</div></div>
+      </div>
+      <div class="pill"><span class="dot"></span>07 / 11</div>
+    </div>
+    <div class="body-area">
+      <div class="head">
+        <div class="eyebrow">Конструкторская часть · база данных</div>
+        <h2 class="h2">PostgreSQL: <span class="accent">четыре схемы</span> по&nbsp;доменам.</h2>
+      </div>
+      <div>
+        <div class="schema-grid">
+          <div class="schema-card">
+            <div class="head">
+              <div class="name">identity</div>
+              <div class="desc">Пользователи и&nbsp;сессии</div>
+            </div>
+            <ul>
+              <li class="key">users</li>
+              <li>refresh_tokens</li>
+              <li>email · password_hash</li>
+              <li>role · organization_id</li>
+              <li>created_at · updated_at</li>
+            </ul>
+          </div>
+          <div class="schema-card">
+            <div class="head">
+              <div class="name">organization</div>
+              <div class="desc">Компании и&nbsp;партнёры</div>
+            </div>
+            <ul>
+              <li class="key">organizations</li>
+              <li>partner_requests</li>
+              <li>organization_members</li>
+              <li>org_invites</li>
+              <li>doc_inn · egrul · charter</li>
+            </ul>
+          </div>
+          <div class="schema-card">
+            <div class="head">
+              <div class="name">learning</div>
+              <div class="desc">Курсы и&nbsp;интенсивы</div>
+            </div>
+            <ul>
+              <li class="key">courses · lessons</li>
+              <li>enrollments · lesson_progress</li>
+              <li>intensives · intensive_stages</li>
+              <li>intensive_applications</li>
+              <li>task_submissions · certificates</li>
+            </ul>
+          </div>
+          <div class="schema-card">
+            <div class="head">
+              <div class="name">communication</div>
+              <div class="desc">Уведомления и&nbsp;файлы</div>
+            </div>
+            <ul>
+              <li class="key">notifications</li>
+              <li>files (метаданные)</li>
+              <li>audit_log</li>
+              <li>bucket · object_key</li>
+              <li>access_level</li>
+            </ul>
+          </div>
+        </div>
+        <div class="db-foot">
+          <div class="item">
+            <div class="k">Ключи</div>
+            <div class="v">UUID для всех сущностей</div>
+          </div>
+          <div class="item">
+            <div class="k">Уроки</div>
+            <div class="v">parent_id — модуль → урок → тест</div>
+          </div>
+          <div class="item">
+            <div class="k">Тесты</div>
+            <div class="v">JSONB · схемы вопросов и&nbsp;ответов</div>
+          </div>
+          <div class="item">
+            <div class="k">Целостность</div>
+            <div class="v">FK · уникальные индексы · каскад</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer">
+      <span class="me">Самсонов И. В. · 4-ИС2</span>
+      <span>16 таблиц · 4 схемы PostgreSQL</span>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SLIDE 8 — Безопасность
+  ============================================================ -->
+  <section data-screen-label="08 Безопасность" data-om-validate="no_overflowing_text,no_overlapping_text,slide_sized_text">
+    <div class="chrome">
+      <div class="logo">
+        <div class="mark">РЕД</div>
+        <div class="wordmark"><div class="name">Академия</div><div class="sub">Образовательная платформа</div></div>
+      </div>
+      <div class="pill"><span class="dot"></span>08 / 11</div>
+    </div>
+    <div class="body-area">
+      <div class="head">
+        <div class="eyebrow">Конструкторская часть · безопасность данных</div>
+        <h2 class="h2">Защита прикладного<br>и&nbsp;инфраструктурного контуров.</h2>
+      </div>
+      <div class="sec-cols">
+        <div class="sec-list">
+          <div class="row"><div class="k">BCrypt</div><div class="v">Адаптивное хеширование паролей пользователей</div></div>
+          <div class="row"><div class="k">JWT</div><div class="v">Access-токен с&nbsp;ролью и&nbsp;organizationId, refresh-токен с&nbsp;признаком отзыва</div></div>
+          <div class="row"><div class="k">Ролевая модель</div><div class="v">Серверные requireUserId / requireRole на&nbsp;каждом защищённом endpoint</div></div>
+          <div class="row"><div class="k">SQL</div><div class="v">JdbcTemplate с&nbsp;параметризованными запросами — защита от&nbsp;инъекций</div></div>
+          <div class="row"><div class="k">Изоляция</div><div class="v">Сервисы в&nbsp;Docker-сети, внешний доступ только через Caddy</div></div>
+          <div class="row"><div class="k">HTTPS</div><div class="v">Шифрование внешнего трафика · автоматический Let's Encrypt</div></div>
+          <div class="row"><div class="k">Секреты</div><div class="v">Пароли, JWT-ключ, креды RabbitMQ и&nbsp;MinIO — в&nbsp;переменных окружения</div></div>
+        </div>
+        <div class="sec-side">
+          <div class="sec-card">
+            <div class="k">Принцип</div>
+            <div class="v">Клиент не&nbsp;считается доверенной средой</div>
+            <div class="d">Все критические проверки дублируются на&nbsp;backend: токен, роль, принадлежность к&nbsp;организации, доступ к&nbsp;ресурсу.</div>
+          </div>
+          <div class="sec-card">
+            <div class="k">Файлы</div>
+            <div class="v">Метаданные в&nbsp;БД, объекты в&nbsp;MinIO</div>
+            <div class="d">Бизнес-данные и&nbsp;бинарные объекты разделены. Готовность к&nbsp;антивирусу и&nbsp;политикам доступа.</div>
+          </div>
+          <div class="sec-card">
+            <div class="k">Аудит</div>
+            <div class="v">audit_log + события RabbitMQ</div>
+            <div class="d">Регистрация ключевых действий пользователя для разбора инцидентов и&nbsp;анализа активности.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer">
+      <span class="me">Самсонов И. В. · 4-ИС2</span>
+      <span>OWASP ASVS 4.0.3 · OWASP Top&nbsp;10</span>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SLIDE 9 — Экономика
+  ============================================================ -->
+  <section data-screen-label="09 Экономика" data-om-validate="no_overflowing_text,no_overlapping_text,slide_sized_text">
+    <div class="chrome">
+      <div class="logo">
+        <div class="mark">РЕД</div>
+        <div class="wordmark"><div class="name">Академия</div><div class="sub">Образовательная платформа</div></div>
+      </div>
+      <div class="pill"><span class="dot"></span>09 / 11</div>
+    </div>
+    <div class="body-area">
+      <div class="head">
+        <div class="eyebrow">Экономическая часть</div>
+        <h2 class="h2">Open-source-стек и&nbsp;единый сервер<br>под Docker Compose.</h2>
+      </div>
+      <div class="econ-cols">
+        <div class="econ-card-big">
+          <h3>Трудозатраты разработки · 340 часов</h3>
+          <div class="bar-chart">
+            <div class="bar-row">
+              <div class="k">Проектирование архитектуры и&nbsp;БД</div>
+              <div class="bar-track"><div class="bar-fill" style="width: 17.6%;"></div></div>
+              <div class="v">60&nbsp;ч</div>
+            </div>
+            <div class="bar-row">
+              <div class="k">Backend · 4 микросервиса и&nbsp;Gateway</div>
+              <div class="bar-track"><div class="bar-fill" style="width: 41.2%;"></div></div>
+              <div class="v">140&nbsp;ч</div>
+            </div>
+            <div class="bar-row">
+              <div class="k">Frontend · React и&nbsp;TypeScript</div>
+              <div class="bar-track"><div class="bar-fill" style="width: 26.5%;"></div></div>
+              <div class="v">90&nbsp;ч</div>
+            </div>
+            <div class="bar-row">
+              <div class="k">Инфраструктура · Docker и&nbsp;Caddy</div>
+              <div class="bar-track"><div class="bar-fill" style="width: 5.9%;"></div></div>
+              <div class="v">20&nbsp;ч</div>
+            </div>
+            <div class="bar-row">
+              <div class="k">Тестирование и&nbsp;документация</div>
+              <div class="bar-track"><div class="bar-fill" style="width: 8.8%;"></div></div>
+              <div class="v">30&nbsp;ч</div>
+            </div>
+          </div>
+          <div class="econ-total">
+            <div class="k">Лицензионные расходы</div>
+            <div class="v">0&nbsp;₽</div>
+          </div>
+        </div>
+        <div class="econ-side">
+          <div class="econ-stat">
+            <div class="k">Open-source стек</div>
+            <div class="v">0&nbsp;₽ лицензий</div>
+            <div class="d">Spring Boot, React, PostgreSQL, RabbitMQ, MinIO, Caddy, Docker — все открытые.</div>
+          </div>
+          <div class="econ-stat dark">
+            <div class="k">Эксплуатация</div>
+            <div class="v">Один сервер</div>
+            <div class="d">Запуск одной командой docker compose up&nbsp;— простое сопровождение.</div>
+          </div>
+          <div class="econ-stat">
+            <div class="k">Окупаемость</div>
+            <div class="v">Замещение SaaS</div>
+            <div class="d">Закрывает функции LMS, файлохранилища и&nbsp;проверки заданий без подписок.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer">
+      <span class="me">Самсонов И. В. · 4-ИС2</span>
+      <span>редакадемия.рф · 2026</span>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SLIDE 10 — Ожидаемые результаты
+  ============================================================ -->
+  <section data-screen-label="10 Результаты" data-om-validate="no_overflowing_text,no_overlapping_text,slide_sized_text">
+    <div class="chrome">
+      <div class="logo">
+        <div class="mark">РЕД</div>
+        <div class="wordmark"><div class="name">Академия</div><div class="sub">Образовательная платформа</div></div>
+      </div>
+      <div class="pill"><span class="dot"></span>10 / 11</div>
+    </div>
+    <div class="body-area">
+      <div class="head">
+        <div class="eyebrow">Ожидаемые результаты</div>
+        <h2 class="h2">Цель достигнута: работающая платформа,<br>пройденные сценарии, масштабируемая архитектура.</h2>
+      </div>
+      <div class="res-grid">
+        <div class="res-card">
+          <div class="n">01</div>
+          <div class="body-c">
+            <h4>Реализована LMS-платформа целиком</h4>
+            <p>Регистрация и&nbsp;авторизация, каталог курсов, обучение, тесты, интенсивы с&nbsp;этапами, сертификаты, организации, партнёрские заявки.</p>
+          </div>
+        </div>
+        <div class="res-card">
+          <div class="n">02</div>
+          <div class="body-c">
+            <h4>Ролевая модель и&nbsp;разграничение доступа</h4>
+            <p>Пять ролей: студент, корп. сотрудник, партнёр, наставник, администратор — каждая со&nbsp;своим интерфейсом и&nbsp;серверной проверкой.</p>
+          </div>
+        </div>
+        <div class="res-card">
+          <div class="n">03</div>
+          <div class="body-c">
+            <h4>Микросервисная архитектура и&nbsp;контейнеризация</h4>
+            <p>Четыре сервиса + Gateway, единый docker-compose.yml, Caddy на&nbsp;внешнем контуре. Воспроизводимый запуск окружения.</p>
+          </div>
+        </div>
+        <div class="res-card">
+          <div class="n">04</div>
+          <div class="body-c">
+            <h4>Готовность к&nbsp;развитию и&nbsp;эксплуатации</h4>
+            <p>Тестовые пользователи и&nbsp;данные. Точки роста: автотесты API, e2e, расширенный аудит, импорт сотрудников.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer">
+      <span class="me">Самсонов И. В. · 4-ИС2</span>
+      <span>Цель и&nbsp;задачи проекта выполнены</span>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SLIDE 11 — Источники
+  ============================================================ -->
+  <section data-screen-label="11 Источники" data-om-validate="no_overflowing_text,no_overlapping_text,slide_sized_text" data-deck-last-visible="">
+    <div class="chrome">
+      <div class="logo">
+        <div class="mark">РЕД</div>
+        <div class="wordmark"><div class="name">Академия</div><div class="sub">Образовательная платформа</div></div>
+      </div>
+      <div class="pill"><span class="dot"></span>11 / 11</div>
+    </div>
+    <div class="body-area">
+      <div class="head">
+        <div class="eyebrow">Основные источники информации</div>
+      </div>
+      <div class="src-grid">
+        <div class="src-card">
+          <div class="cat-h">
+            <div class="badge">01</div>
+            <div class="name">Государственные стандарты</div>
+          </div>
+          <ul>
+            <li>ГОСТ 2.105-95 · ЕСКД<span class="meta">Общие требования к&nbsp;текстовым документам</span></li>
+            <li>ГОСТ 19.201-78 · ЕСПД<span class="meta">Техническое задание на&nbsp;программу</span></li>
+            <li>ГОСТ 19.404-79 · ЕСПД<span class="meta">Описание программы</span></li>
+            <li>ГОСТ 34.602-89<span class="meta">Техническое задание на&nbsp;создание АС</span></li>
+          </ul>
+        </div>
+        <div class="src-card">
+          <div class="cat-h">
+            <div class="badge">02</div>
+            <div class="name">Документация технологий</div>
+          </div>
+          <ul>
+            <li>Spring Boot Reference Documentation<span class="meta">spring.io · backend-фреймворк</span></li>
+            <li>React Documentation<span class="meta">react.dev · клиентская библиотека</span></li>
+            <li>PostgreSQL 16 Documentation<span class="meta">postgresql.org · справочник СУБД</span></li>
+            <li>Docker · Caddy · RabbitMQ · MinIO<span class="meta">официальные руководства инфраструктуры</span></li>
+          </ul>
+        </div>
+        <div class="src-card">
+          <div class="cat-h">
+            <div class="badge">03</div>
+            <div class="name">Безопасность</div>
+          </div>
+          <ul>
+            <li>RFC 7519 · JSON Web Token<span class="meta">rfc-editor.org · формат токенов</span></li>
+            <li>OWASP Top 10 : 2021<span class="meta">owasp.org · риски веб-приложений</span></li>
+            <li>OWASP ASVS 4.0.3<span class="meta">owasp.org · стандарт верификации</span></li>
+            <li>Spring Security · BCrypt<span class="meta">рекомендации по&nbsp;хранению паролей</span></li>
+          </ul>
+        </div>
+        <div class="src-card">
+          <div class="cat-h">
+            <div class="badge">04</div>
+            <div class="name">LMS и&nbsp;архитектура</div>
+          </div>
+          <ul>
+            <li>Moodle Documentation<span class="meta">docs.moodle.org · концепции LMS</span></li>
+            <li>Fowler M. · Microservices Resource Guide<span class="meta">martinfowler.com · микросервисы</span></li>
+            <li>Spring Cloud Gateway Documentation<span class="meta">маршрутизация и&nbsp;CORS</span></li>
+            <li>MDN Web Docs<span class="meta">developer.mozilla.org · веб-стандарты</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="footer">
+      <span class="me">Самсонов И. В. · 4-ИС2 · Тверь&nbsp;· 2026</span>
+      <span>Спасибо за внимание — готов ответить на&nbsp;вопросы</span>
+    </div>
+  </section>
+
+</deck-stage>
+</body>
+</html>

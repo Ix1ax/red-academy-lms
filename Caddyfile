@@ -2,7 +2,7 @@
 	email {$ACME_EMAIL}
 }
 
-{$APP_DOMAIN}, www.{$APP_DOMAIN} {
+{$APP_DOMAIN} {
 	encode zstd gzip
 
 	handle /api/* {
