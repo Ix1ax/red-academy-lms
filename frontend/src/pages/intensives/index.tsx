@@ -402,7 +402,8 @@ export function IntensiveDetailsPage({ intensiveId, intensives, session }: { int
   const hasApplied = Boolean(application && ["PENDING", "APPROVED"].includes(application.status));
   const isMentorHere = Boolean(session && (details?.mentorUserIds ?? []).includes(session.user.id));
   const canSeeTasks = Boolean(isActiveParticipant || isMentorHere || session?.user.role === "PARTNER_MANAGER" || session?.user.role === "ADMIN");
-  const canSubmit = Boolean(isActiveParticipant && canApplyToIntensive(session!));
+  const hasEnded = intensive.status === "COMPLETED" || (intensive.endsAt ? new Date(intensive.endsAt).getTime() <= now : false);
+  const canSubmit = Boolean(isActiveParticipant && canApplyToIntensive(session!) && !hasEnded);
   const canManage = Boolean(session && intensive && (canManageIntensive(session, intensive) || isMentorHere));
   const pendingApplications = (details?.applications ?? []).filter((item) => item.status === "PENDING");
   const decidedApplications = (details?.applications ?? []).filter((item) => item.status !== "PENDING");
@@ -507,6 +508,9 @@ export function IntensiveDetailsPage({ intensiveId, intensives, session }: { int
                       <p className="text-[11px] font-semibold uppercase tracking-wider text-muted">Задание</p>
                       <h3 className="mt-2 text-[15px] font-semibold text-ink">{activeStage.taskTitle}</h3>
                       <p className="mt-2 text-[13px] leading-5 text-muted">{activeStage.taskDescription}</p>
+                      {hasEnded && isActiveParticipant && (
+                        <p className="mt-4 rounded-xl bg-surface px-3 py-2.5 text-[13px] text-muted">Интенсив завершён — приём решений закрыт.</p>
+                      )}
                       {canSubmit && (
                         <div className="mt-4 grid gap-2.5">
                           <textarea
@@ -678,11 +682,11 @@ export function IntensiveDetailsPage({ intensiveId, intensives, session }: { int
                         </div>
                         {submission.answerText && <p className="rounded-xl bg-white p-3 text-[13px] leading-5 text-muted">{submission.answerText}</p>}
                         <div className="grid gap-2 sm:grid-cols-[100px_minmax(0,1fr)_auto]">
-                          <input className="h-9 rounded-xl border border-line bg-white px-3 text-[13px] outline-none focus:border-primary" value={draft.score} onChange={(e) => setReviews({ ...reviews, [submission.id]: { ...draft, score: e.target.value } })} />
-                          <input className="h-9 rounded-xl border border-line bg-white px-3 text-[13px] outline-none focus:border-primary" placeholder="Комментарий участнику" value={draft.comment} onChange={(e) => setReviews({ ...reviews, [submission.id]: { ...draft, comment: e.target.value } })} />
-                          <button onClick={() => reviewSubmission(submission.id)} disabled={Boolean(pendingReviewId)} className="inline-flex h-9 items-center justify-center gap-2 rounded-xl bg-red-gradient px-3 text-[13px] font-semibold text-white shadow-red-sm disabled:cursor-not-allowed disabled:opacity-60">
+                          <input disabled={reviewed} className="h-9 rounded-xl border border-line bg-white px-3 text-[13px] outline-none focus:border-primary disabled:bg-surface disabled:text-muted" value={draft.score} onChange={(e) => setReviews({ ...reviews, [submission.id]: { ...draft, score: e.target.value } })} />
+                          <input disabled={reviewed} className="h-9 rounded-xl border border-line bg-white px-3 text-[13px] outline-none focus:border-primary disabled:bg-surface disabled:text-muted" placeholder="Комментарий участнику" value={draft.comment} onChange={(e) => setReviews({ ...reviews, [submission.id]: { ...draft, comment: e.target.value } })} />
+                          <button onClick={() => reviewSubmission(submission.id)} disabled={reviewed || Boolean(pendingReviewId)} className="inline-flex h-9 items-center justify-center gap-2 rounded-xl bg-red-gradient px-3 text-[13px] font-semibold text-white shadow-red-sm disabled:cursor-not-allowed disabled:bg-none disabled:bg-zinc-200 disabled:text-zinc-400 disabled:shadow-none">
                             <CheckCircle2 size={14} />
-                            {pendingReviewId === submission.id ? "..." : "Оценить"}
+                            {reviewed ? "Проверено" : pendingReviewId === submission.id ? "..." : "Оценить"}
                           </button>
                         </div>
                       </div>
@@ -736,22 +740,24 @@ export function IntensiveDetailsPage({ intensiveId, intensives, session }: { int
                 </div>
 
                 {/* Assigned mentors */}
-                {(details?.mentorUserIds ?? []).length > 0 && (
+                {(details?.mentors ?? []).length > 0 && (
                   <div className="mb-3 grid gap-1.5">
-                    {(details?.mentorUserIds ?? []).map((uid) => {
-                      const u = [...(details?.rating ?? []), ...(details?.applications ?? [])].find((x) => x.userId === uid);
-                      return (
-                        <div key={uid} className="flex items-center gap-2 rounded-xl bg-amber-50 border border-amber-200 px-3 py-2">
-                          <div className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-amber-100 text-amber-700 text-[10px] font-bold">М</div>
-                          <span className="text-[12px] font-medium text-ink truncate">{u?.fullName || u?.email || uid.slice(0, 8)}</span>
+                    {(details?.mentors ?? []).map((m) => (
+                      <div key={m.userId} className="flex items-center gap-2 rounded-xl bg-amber-50 border border-amber-200 px-3 py-2">
+                        <div className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-amber-100 text-amber-700 text-[10px] font-bold">
+                          {m.fullName?.[0]?.toUpperCase() ?? "М"}
                         </div>
-                      );
-                    })}
+                        <div className="min-w-0">
+                          <p className="text-[12px] font-medium text-ink truncate">{m.fullName || "Ментор"}</p>
+                          {m.email && <p className="text-[11px] text-muted truncate">{m.email}</p>}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
 
                 {/* Search + add mentor */}
-                <div className="relative">
+                <div>
                   <input
                     className="h-9 w-full rounded-xl border border-line bg-white px-3 text-[12px] outline-none transition focus:border-primary"
                     placeholder="Поиск ментора по имени или email..."
@@ -759,7 +765,7 @@ export function IntensiveDetailsPage({ intensiveId, intensives, session }: { int
                     onChange={(e) => searchMentors(e.target.value)}
                   />
                   {mentorResults.length > 0 && (
-                    <div className="absolute left-0 right-0 top-10 z-20 overflow-hidden rounded-xl border border-line bg-white shadow-card">
+                    <div className="mt-1.5 max-h-56 overflow-y-auto rounded-xl border border-line bg-white shadow-card">
                       {mentorResults.map((u) => (
                         <button
                           key={u.id}
@@ -807,6 +813,7 @@ type IntensiveDetails = {
   applications?: Array<{ id: string; userId: string; githubUrl?: string | null; status: string; email?: string | null; fullName?: string | null }>;
   submissions?: Array<{ id: string; taskId: string; userId: string; githubUrl?: string | null; answerText?: string | null; status: string; score?: number | null; submittedAt: string; stageTitle?: string | null; email?: string | null; fullName?: string | null; reviewerComment?: string | null }>;
   mentorUserIds?: string[];
+  mentors?: Array<{ userId: string; fullName?: string | null; email?: string | null }>;
 };
 
 type IntensiveStage = {

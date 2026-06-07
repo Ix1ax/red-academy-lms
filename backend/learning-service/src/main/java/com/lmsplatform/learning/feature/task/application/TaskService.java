@@ -42,10 +42,19 @@ public class TaskService {
     }
 
     public SubmissionDto review(UUID submissionId, ReviewRequest request) {
+        var currentStatus = jdbc.query(
+                "SELECT status FROM learning.task_submissions WHERE id = ?",
+                (rs, rowNum) -> rs.getString("status"), submissionId);
+        if (currentStatus.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Submission not found");
+        }
+        if ("REVIEWED".equals(currentStatus.get(0))) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Submission has already been reviewed");
+        }
         jdbc.update("""
                 UPDATE learning.task_submissions
                 SET score = ?, status = 'REVIEWED', reviewer_comment = ?, reviewed_at = now()
-                WHERE id = ?
+                WHERE id = ? AND status <> 'REVIEWED'
                 """, request.score(), request.comment(), submissionId);
         var rows = jdbc.query("""
                 SELECT id, task_id, user_id, file_id, answer_text, score, status, reviewer_comment

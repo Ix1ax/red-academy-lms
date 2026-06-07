@@ -9,6 +9,9 @@ public record IntensiveDetailsDto(
         List<ParticipantDto> rating,
         List<ApplicationDto> applications,
         List<IntensiveSubmissionDto> submissions,
-        List<UUID> mentorUserIds
+        List<UUID> mentorUserIds,
+        List<MentorDto> mentors
 ) {
+    public record MentorDto(UUID userId, String fullName, String email) {
+    }
 }

@@ -4,7 +4,7 @@ import type { Session } from "@/shared/auth/session";
 import { participantStatusLabel, submissionStatusLabel } from "@/shared/lib/labels";
 import { toastError, toastSuccess } from "@/shared/ui/toast";
 import { CheckCircle2, ClipboardCheck, Github, MessageSquareText, UserCog, XCircle } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 type Participant = {
   id: string;
@@ -44,7 +44,7 @@ export function MentorPage({ session, intensives }: { session: Session | null; i
   const [pendingParticipantId, setPendingParticipantId] = useState("");
   const [pendingReviewId, setPendingReviewId] = useState("");
 
-  const availableIntensives = useMemo(() => intensives.filter((item) => item.status !== "DRAFT"), [intensives]);
+  const availableIntensives = intensives;
 
   useEffect(() => {
     if (!selectedIntensiveId && availableIntensives[0]) {
@@ -163,6 +163,7 @@ export function MentorPage({ session, intensives }: { session: Session | null; i
         <div className="grid gap-3 p-5">
           {(details?.submissions ?? []).map((submission) => {
             const draft = reviews[submission.id] ?? { score: String(submission.score ?? 100), comment: submission.reviewerComment ?? "" };
+            const reviewed = submission.status === "REVIEWED";
             return (
               <div key={submission.id} className="grid min-w-0 gap-3 rounded-2xl border border-line bg-surface p-4">
                 <div className="flex flex-wrap items-start justify-between gap-2">
@@ -175,11 +176,11 @@ export function MentorPage({ session, intensives }: { session: Session | null; i
                 </div>
                 {submission.answerText && <p className="rounded-xl bg-white p-3 text-sm leading-6 text-muted">{submission.answerText}</p>}
                 <div className="grid min-w-0 gap-2 sm:grid-cols-[100px_minmax(0,1fr)_auto]">
-                  <input className="h-10 rounded-xl border border-line px-3 text-sm outline-none focus:border-primary" value={draft.score} onChange={(event) => setReviews({ ...reviews, [submission.id]: { ...draft, score: event.target.value } })} />
-                  <input className="h-10 rounded-xl border border-line px-3 text-sm outline-none focus:border-primary" placeholder="Комментарий участнику" value={draft.comment} onChange={(event) => setReviews({ ...reviews, [submission.id]: { ...draft, comment: event.target.value } })} />
-                  <button onClick={() => reviewSubmission(submission)} disabled={Boolean(pendingReviewId)} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-muted">
+                  <input disabled={reviewed} className="h-10 rounded-xl border border-line px-3 text-sm outline-none focus:border-primary disabled:bg-surface disabled:text-muted" value={draft.score} onChange={(event) => setReviews({ ...reviews, [submission.id]: { ...draft, score: event.target.value } })} />
+                  <input disabled={reviewed} className="h-10 rounded-xl border border-line px-3 text-sm outline-none focus:border-primary disabled:bg-surface disabled:text-muted" placeholder="Комментарий участнику" value={draft.comment} onChange={(event) => setReviews({ ...reviews, [submission.id]: { ...draft, comment: event.target.value } })} />
+                  <button onClick={() => reviewSubmission(submission)} disabled={reviewed || Boolean(pendingReviewId)} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-muted">
                     <CheckCircle2 size={15} />
-                    {pendingReviewId === submission.id ? "Сохраняю..." : "Оценить"}
+                    {reviewed ? "Проверено" : pendingReviewId === submission.id ? "Сохраняю..." : "Оценить"}
                   </button>
                 </div>
               </div>

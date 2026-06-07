@@ -101,6 +101,30 @@ public class IntensiveService {
         return findIntensive(id);
     }
 
+    /**
+     * Marks every published intensive whose end date has passed as COMPLETED.
+     * DRAFT and HIDDEN intensives are left untouched (not publicly running),
+     * and already COMPLETED ones are skipped. Returns the number of intensives closed.
+     */
+    public int completeExpiredIntensives() {
+        var expired = jdbc.queryForList("""
+                SELECT id FROM learning.intensives
+                WHERE ends_at < now() AND status NOT IN ('COMPLETED', 'DRAFT', 'HIDDEN')
+                """, UUID.class);
+        if (expired.isEmpty()) {
+            return 0;
+        }
+        jdbc.update("""
+                UPDATE learning.intensives
+                SET status = 'COMPLETED', updated_at = now()
+                WHERE ends_at < now() AND status NOT IN ('COMPLETED', 'DRAFT', 'HIDDEN')
+                """);
+        for (var id : expired) {
+            events.publish("intensive.status_changed", Map.of("intensiveId", id.toString(), "status", "COMPLETED"));
+        }
+        return expired.size();
+    }
+
     public IntensiveDetailsDto get(UUID id) {
         var intensive = findIntensive(id);
         var stages = jdbc.query("""
@@ -120,8 +144,19 @@ public class IntensiveService {
                 rs.getTimestamp("starts_at").toInstant(),
                 rs.getTimestamp("ends_at").toInstant()
         ), id);
-        var mentorUserIds = jdbc.query("SELECT user_id FROM learning.intensive_managers WHERE intensive_id = ? AND role = 'MENTOR' AND status = 'ACTIVE'", (rs, rowNum) -> rs.getObject("user_id", UUID.class), id);
-        return new IntensiveDetailsDto(intensive, stages, rating(id), applications(id), submissions(id), mentorUserIds);
+        var mentors = jdbc.query("""
+                SELECT m.user_id, u.full_name, u.email
+                FROM learning.intensive_managers m
+                LEFT JOIN identity.users u ON u.id = m.user_id
+                WHERE m.intensive_id = ? AND m.role = 'MENTOR' AND m.status = 'ACTIVE'
+                ORDER BY u.full_name NULLS LAST
+                """, (rs, rowNum) -> new IntensiveDetailsDto.MentorDto(
+                rs.getObject("user_id", UUID.class),
+                rs.getString("full_name"),
+                rs.getString("email")
+        ), id);
+        var mentorUserIds = mentors.stream().map(IntensiveDetailsDto.MentorDto::userId).toList();
+        return new IntensiveDetailsDto(intensive, stages, rating(id), applications(id), submissions(id), mentorUserIds, mentors);
     }
 
     public ApplicationDto apply(UUID intensiveId, ApplicationRequest request) {
@@ -308,7 +343,10 @@ public class IntensiveService {
     }
 
     public IntensiveSubmissionDto submitStage(UUID intensiveId, UUID stageId, IntensiveSubmissionRequest request) {
-        findIntensive(intensiveId);
+        var intensive = findIntensive(intensiveId);
+        if ("COMPLETED".equals(intensive.status()) || (intensive.endsAt() != null && intensive.endsAt().isBefore(Instant.now()))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Intensive has already ended");
+        }
         if (request.githubUrl() == null || request.githubUrl().isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "GitHub profile is required");
         }
