@@ -81,7 +81,7 @@ function BrandPanel() {
       </div>
       <div className="relative flex items-center gap-2 text-[12px] text-white/30">
         <CheckCircle2 size={12} className="text-primary/70" />
-        Безопасная платформа РедСофт
+        Безопасная платформа РедАкадемия
       </div>
     </div>
   );

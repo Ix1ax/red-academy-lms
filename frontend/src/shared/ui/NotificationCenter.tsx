@@ -1,4 +1,5 @@
 import { apiRequest } from "@/shared/api/client";
+import { createNotificationsSocket, type SocketNotification } from "@/shared/api/notificationsSocket";
 import type { Session } from "@/shared/auth/session";
 import { toastSuccess } from "@/shared/ui/toast";
 import { Bell, CheckCheck, Inbox, Loader2 } from "lucide-react";
@@ -63,14 +64,38 @@ export function NotificationCenter({ session }: { session: Session | null }) {
     }
   }, [session, storageKey]);
 
+  const handleIncoming = useCallback((incoming: SocketNotification) => {
+    setItems((current) => {
+      if (current.some((item) => item.id === incoming.id)) return current;
+      if (!incoming.readAt && incoming.createdAt > lastSeenAt.current) {
+        toastSuccess(incoming.title, incoming.message);
+        lastSeenAt.current = incoming.createdAt;
+        localStorage.setItem(storageKey, incoming.createdAt);
+      }
+      return mergeNotifications([incoming, ...current]).slice(0, 30);
+    });
+  }, [storageKey]);
+
   useEffect(() => {
     loadedOnce.current = false;
     lastSeenAt.current = "";
     loadNotifications();
     if (!session) return undefined;
-    const timer = window.setInterval(loadNotifications, 45_000);
+    // Realtime stream is primary; REST poll stays as a slow fallback if the socket drops.
+    const timer = window.setInterval(loadNotifications, 120_000);
     return () => window.clearInterval(timer);
   }, [loadNotifications, session]);
+
+  useEffect(() => {
+    if (!session) return undefined;
+    const dispose = createNotificationsSocket({
+      userId: session.user.id,
+      organizationId: session.user.organizationId,
+      token: session.accessToken,
+      onNotification: handleIncoming,
+    });
+    return dispose;
+  }, [session, handleIncoming]);
 
   useEffect(() => {
     if (!open) return undefined;

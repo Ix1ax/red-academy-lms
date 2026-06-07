@@ -3,6 +3,7 @@ package com.lmsplatform.communication.feature.notification.application;
 import com.lmsplatform.communication.feature.notification.domain.NotificationCreateRequest;
 import com.lmsplatform.communication.feature.notification.domain.NotificationDto;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.sql.ResultSet;
@@ -15,9 +16,11 @@ import java.util.UUID;
 @Service
 public class NotificationService {
     private final JdbcTemplate jdbc;
+    private final SimpMessagingTemplate messaging;
 
-    public NotificationService(JdbcTemplate jdbc) {
+    public NotificationService(JdbcTemplate jdbc, SimpMessagingTemplate messaging) {
         this.jdbc = jdbc;
+        this.messaging = messaging;
     }
 
     public List<NotificationDto> list(UUID userId, UUID organizationId) {
@@ -50,7 +53,19 @@ public class NotificationService {
                         INSERT INTO communication.notifications (id, user_id, organization_id, title, message, type)
                         VALUES (?, ?, ?, ?, ?, ?)
                         """, id, request.userId(), request.organizationId(), request.title(), request.message(), request.type());
-        return new NotificationDto(id, request.userId(), request.organizationId(), request.title(), request.message(), request.type(), null, Instant.now());
+        var notification = new NotificationDto(id, request.userId(), request.organizationId(), request.title(), request.message(), request.type(), null, Instant.now());
+        publish(notification);
+        return notification;
+    }
+
+    private void publish(NotificationDto notification) {
+        if (notification.userId() != null) {
+            messaging.convertAndSend("/queue/users/" + notification.userId() + "/notifications", notification);
+        }
+        if (notification.organizationId() != null) {
+            messaging.convertAndSend("/topic/organizations/" + notification.organizationId() + "/events", notification);
+        }
+        messaging.convertAndSend("/topic/platform/events", notification);
     }
 
     public void markAsRead(UUID id) {

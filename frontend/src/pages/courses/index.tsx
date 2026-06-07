@@ -875,7 +875,12 @@ function LessonCard({ lesson, answers, setAnswers, completedScore, disabled, onC
         <button onClick={onComplete} disabled={disabled} className="inline-flex h-10 items-center gap-2 rounded-xl bg-red-gradient px-5 text-[13px] font-semibold text-white shadow-red-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:bg-none disabled:bg-zinc-200 disabled:text-zinc-400 disabled:shadow-none">
           <CheckCircle2 size={15} />{completedScore !== undefined ? "Засчитано" : lesson.type === "TEST" ? "Проверить тест" : "Отметить пройденным"}
         </button>
-        <button disabled={!nextLesson} onClick={() => nextLesson && onSelectLesson?.(nextLesson.id)} className="inline-flex h-10 items-center gap-2 rounded-xl border border-line bg-white px-4 text-[13px] font-medium text-ink transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-40">
+        <button
+          disabled={!nextLesson || completedScore === undefined}
+          onClick={() => nextLesson && completedScore !== undefined && onSelectLesson?.(nextLesson.id)}
+          title={nextLesson && completedScore === undefined ? "Завершите текущий урок, чтобы открыть следующий" : undefined}
+          className="inline-flex h-10 items-center gap-2 rounded-xl border border-line bg-white px-4 text-[13px] font-medium text-ink transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-40"
+        >
           Следующий<ChevronRight size={15} />
         </button>
       </div>

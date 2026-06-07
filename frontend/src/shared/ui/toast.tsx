@@ -1,4 +1,4 @@
-import { CheckCircle2, XCircle } from "lucide-react";
+import { CheckCircle2, X, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 
 type ToastTone = "success" | "error";
@@ -30,6 +30,8 @@ export function toastError(title: string, text?: string) {
 export function ToastViewport() {
   const [items, setItems] = useState<ToastItem[]>([]);
 
+  const dismiss = (id: number) => setItems((current) => current.filter((item) => item.id !== id));
+
   useEffect(() => {
     function onToast(event: Event) {
       const detail = (event as CustomEvent<ToastPayload>).detail;
@@ -59,10 +61,18 @@ export function ToastViewport() {
           >
             <div className="flex gap-3">
               <Icon className={item.tone === "success" ? "text-emerald-600" : "text-primary"} size={20} />
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-ink">{item.title}</p>
                 {item.text && <p className="mt-1 text-sm leading-5 text-muted">{item.text}</p>}
               </div>
+              <button
+                type="button"
+                onClick={() => dismiss(item.id)}
+                aria-label="Закрыть уведомление"
+                className="-mr-1 -mt-1 shrink-0 rounded-lg p-1 text-muted transition hover:bg-surface hover:text-ink"
+              >
+                <X size={16} />
+              </button>
             </div>
           </div>
         );

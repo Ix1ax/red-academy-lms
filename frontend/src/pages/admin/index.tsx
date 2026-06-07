@@ -3,6 +3,7 @@ import type { Intensive } from "@/entities/intensive/model/types";
 import { apiRequest } from "@/shared/api/client";
 import type { Session } from "@/shared/auth/session";
 import { applicationStatusLabel, courseStatusLabel, intensiveStatusLabel, memberRoleLabel } from "@/shared/lib/labels";
+import { StatisticsExport } from "@/shared/ui/StatisticsExport";
 import { toastError, toastSuccess } from "@/shared/ui/toast";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -319,6 +320,7 @@ export function AdminPage({ courses, intensives, session }: { courses: Course[];
 
           {/* ── OVERVIEW ── */}
           {tab === "overview" && (
+            <div className="grid gap-4">
             <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
               <div className="rounded-2xl border border-line bg-white p-5 shadow-panel">
                 <h2 className="mb-4 flex items-center gap-2 text-[14px] font-semibold text-ink">
@@ -378,6 +380,8 @@ export function AdminPage({ courses, intensives, session }: { courses: Course[];
                   ))}
                 </div>
               </div>
+            </div>
+            <StatisticsExport title="Статистика прохождения курсов (вся платформа)" />
             </div>
           )}
 

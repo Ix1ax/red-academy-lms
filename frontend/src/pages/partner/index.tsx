@@ -6,6 +6,7 @@ import type { Session } from "@/shared/auth/session";
 import { getAccessToken } from "@/shared/auth/session";
 import { courseStatusLabel, intensiveStatusLabel } from "@/shared/lib/labels";
 import { navigate } from "@/shared/router";
+import { StatisticsExport } from "@/shared/ui/StatisticsExport";
 import { StudioField } from "@/shared/ui/studio";
 import { toastError, toastSuccess } from "@/shared/ui/toast";
 import {
@@ -256,6 +257,9 @@ export function PartnerPage({
           )}
         </div>
       )}
+
+      {/* Course-completion statistics (scoped to this company by the backend) */}
+      <StatisticsExport title="Статистика моих сотрудников и курсов" />
 
       {/* Documents */}
       {orgData && (

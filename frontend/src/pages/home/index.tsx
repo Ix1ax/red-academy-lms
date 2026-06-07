@@ -81,7 +81,7 @@ export function HomePage({
           <div className="animate-slide-up">
             <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/8 px-3 py-1.5 text-xs font-medium text-white/80 backdrop-blur-sm">
               <Sparkles size={12} className="text-primary" />
-              Образовательная платформа РедСофт
+              Образовательная платформа РедАкадемия
             </span>
             <h1 className="mt-4 text-[28px] font-bold leading-[1.15] tracking-tight text-white sm:mt-5 sm:text-4xl md:text-5xl xl:text-[52px] xl:leading-[1.1]">
               Учитесь. Растите.{" "}
@@ -358,13 +358,6 @@ function HeroIllustration() {
           </div>
         </div>
 
-        {/* Floating notification bubble */}
-        <div className="absolute -right-2 -top-2 flex items-center gap-2 rounded-2xl border border-white/12 bg-white/10 px-3 py-2 shadow-lg backdrop-blur-sm">
-          <div className="h-5 w-5 rounded-full bg-primary/30 flex items-center justify-center">
-            <div className="h-2 w-2 rounded-full bg-primary" />
-          </div>
-          <p className="text-[10px] font-medium text-white/80">Новый этап открыт!</p>
-        </div>
       </div>
     </div>
   );

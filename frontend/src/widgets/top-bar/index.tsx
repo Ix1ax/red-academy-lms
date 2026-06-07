@@ -10,7 +10,7 @@ export function TopBar({ isLive }: { isLive: boolean }) {
           </div>
           <div>
             <p className="text-sm font-semibold leading-none">РедАкадемия</p>
-            <p className="text-xs text-muted">Платформа РедСофт</p>
+            <p className="text-xs text-muted">Платформа РедАкадемия</p>
           </div>
         </div>
         <nav className="hidden items-center gap-6 text-sm font-medium text-muted md:flex">
