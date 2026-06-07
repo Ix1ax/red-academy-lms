@@ -99,10 +99,10 @@ export function MentorPage({ session, intensives }: { session: Session | null; i
 
   return (
     <div className="grid gap-5">
-      <section className="rounded-3xl border border-line bg-white p-6 shadow-panel">
+      <section className="rounded-3xl border border-line bg-white p-5 shadow-panel sm:p-6">
         <div className="flex items-center gap-3">
-          <UserCog className="text-primary" size={24} />
-          <h1 className="text-3xl font-semibold tracking-tight text-ink">Кабинет наставника</h1>
+          <UserCog className="shrink-0 text-primary" size={24} />
+          <h1 className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">Кабинет наставника</h1>
         </div>
         <p className="mt-2 max-w-3xl text-sm leading-6 text-muted">Выберите интенсив, смотрите зачисленных участников и исключайте тех, кто не справился с этапом.</p>
       </section>

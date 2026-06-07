@@ -476,10 +476,10 @@ function ActionCard({ icon, title, text, onClick }: { icon: ReactNode; title: st
 
 function Header({ title, text }: { title: string; text: string }) {
   return (
-    <section className="rounded-3xl border border-line bg-white p-6 shadow-panel">
+    <section className="rounded-3xl border border-line bg-white p-5 shadow-panel sm:p-6">
       <div className="flex items-center gap-3">
-        <UsersRound className="text-primary" size={24} />
-        <h1 className="text-3xl font-semibold tracking-tight text-ink">{title}</h1>
+        <UsersRound className="shrink-0 text-primary" size={24} />
+        <h1 className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">{title}</h1>
       </div>
       <p className="mt-2 max-w-3xl text-sm leading-6 text-muted">{text}</p>
     </section>

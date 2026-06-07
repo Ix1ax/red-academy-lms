@@ -67,9 +67,9 @@ export function IntensivesPage({
     <div className="grid gap-5">
       {/* Header */}
       <section className="overflow-hidden rounded-3xl border border-line bg-white shadow-card">
-        <div className="bg-hero-gradient p-6">
+        <div className="bg-hero-gradient p-5 sm:p-6">
           <span className="badge badge-dark"><Trophy size={11} />Интенсивы</span>
-          <h1 className="mt-3 text-3xl font-bold tracking-tight text-white">Образовательные интенсивы</h1>
+          <h1 className="mt-3 text-2xl font-bold tracking-tight text-white sm:text-3xl">Образовательные интенсивы</h1>
           <p className="mt-2 text-[14px] leading-6 text-white/60">
             Программы с набором участников, этапами, дедлайнами, проверкой наставниками и итоговым рейтингом.
           </p>
@@ -422,7 +422,7 @@ export function IntensiveDetailsPage({ intensiveId, intensives, session }: { int
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           </div>
         )}
-        <div className="bg-hero-gradient p-6">
+        <div className="bg-hero-gradient p-5 sm:p-6">
           <button onClick={() => navigate("/intensives")} className="mb-4 inline-flex items-center gap-1.5 text-[13px] font-medium text-white/60 transition hover:text-white">
             <ChevronLeft size={15} />
             Все интенсивы
@@ -431,12 +431,12 @@ export function IntensiveDetailsPage({ intensiveId, intensives, session }: { int
             <span className="badge badge-dark">{intensiveStatusLabel(intensive.status)}</span>
             <span className="badge badge-dark">Лимит: {intensive.participantLimit}</span>
           </div>
-          <h1 className="mt-3 text-3xl font-bold tracking-tight text-white">{intensive.title}</h1>
+          <h1 className="mt-3 text-2xl font-bold tracking-tight text-white sm:text-3xl">{intensive.title}</h1>
           <p className="mt-2 max-w-2xl text-[14px] leading-6 text-white/60">{intensive.description}</p>
         </div>
 
         {/* Timer strip */}
-        <div className="flex flex-wrap items-center gap-3 border-t border-line bg-surface px-5 py-3 text-[13px]">
+        <div className="flex flex-wrap items-center gap-3 border-t border-line bg-surface px-4 py-3 text-[13px] sm:px-5">
           <span className="inline-flex items-center gap-2 text-muted">
             <CalendarClock size={15} />
             {startsInText(intensive.startsAt, now)}
@@ -827,7 +827,7 @@ type IntensiveStage = {
 function PageHeader({ title, text }: { title: string; text: string }) {
   return (
     <section className="rounded-3xl border border-line bg-white p-8 shadow-card">
-      <h1 className="text-3xl font-bold tracking-tight text-ink">{title}</h1>
+      <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">{title}</h1>
       <p className="mt-2 max-w-2xl text-[14px] leading-6 text-muted">{text}</p>
     </section>
   );

@@ -59,8 +59,8 @@ export function DashboardPage({ courses, intensives, session }: { courses: Cours
   return (
     <div className="grid gap-5">
       {/* Header */}
-      <section className="rounded-3xl border border-line bg-white p-6 shadow-panel">
-        <h1 className="text-3xl font-semibold tracking-tight text-ink">Личный кабинет</h1>
+      <section className="rounded-3xl border border-line bg-white p-5 shadow-panel sm:p-6">
+        <h1 className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">Личный кабинет</h1>
         <p className="mt-2 max-w-3xl text-[14px] leading-6 text-muted">
           Ваши записи на курсы, доступные интенсивы и выданные сертификаты.
         </p>

@@ -255,7 +255,7 @@ export function AdminPage({ courses, intensives, session }: { courses: Course[];
   return (
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="grid gap-5">
       {/* Header */}
-      <section className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-line bg-white p-6 shadow-panel">
+      <section className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-line bg-white p-5 shadow-panel sm:p-6">
         <div className="flex items-center gap-3">
           <div className="grid h-12 w-12 place-items-center rounded-2xl bg-red-50 text-primary">
             <ShieldCheck size={24} />

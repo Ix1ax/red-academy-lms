@@ -14,12 +14,23 @@
   box-sizing: border-box;
 }
 
+html,
 body {
   margin: 0;
   min-width: 320px;
+  max-width: 100%;
+  /* Hard stop against accidental horizontal scroll on mobile.
+     Individual scroll regions opt back in with their own overflow-x-auto. */
+  overflow-x: hidden;
   background: hsl(220 14% 96%);
   color: hsl(222 20% 11%);
   text-rendering: geometricPrecision;
+}
+
+/* Long unbroken strings (emails, URLs, IDs) are a common source of
+   layout overflow on narrow screens — let them wrap by default. */
+p, span, a, h1, h2, h3, h4, li, td, th, label, div {
+  overflow-wrap: break-word;
 }
 
 a {

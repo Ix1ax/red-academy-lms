@@ -105,12 +105,12 @@ export function CoursesPage({
     <div className="grid gap-5">
       {/* Header */}
       <section className="overflow-hidden rounded-3xl border border-line bg-white shadow-card">
-        <div className="bg-hero-gradient p-6">
+        <div className="bg-hero-gradient p-5 sm:p-6">
           <span className="badge badge-dark">
             <BookOpen size={11} />
             Каталог курсов
           </span>
-          <h1 className="mt-3 text-3xl font-bold tracking-tight text-white">Все курсы платформы</h1>
+          <h1 className="mt-3 text-2xl font-bold tracking-tight text-white sm:text-3xl">Все курсы платформы</h1>
           <p className="mt-2 text-[14px] leading-6 text-white/60">
             Официальные программы основной компании и партнёрские курсы для самостоятельного изучения.
           </p>
@@ -322,7 +322,7 @@ export function CoursePreviewPage({ courseId, courses, session }: { courseId: st
                   <span className="badge badge-dark">{course.authorType === "MAIN_COMPANY" ? "Официальный курс" : "Партнёрский курс"}</span>
                   <span className="badge badge-dark">{levelLabel(course.level)}</span>
                 </div>
-                <h1 className="mt-2 text-3xl font-bold tracking-tight text-white">{course.title}</h1>
+                <h1 className="mt-2 text-2xl font-bold tracking-tight text-white sm:text-3xl">{course.title}</h1>
                 <p className="mt-1.5 max-w-2xl text-[14px] leading-6 text-white/70">{course.description}</p>
               </div>
             </div>
@@ -335,7 +335,7 @@ export function CoursePreviewPage({ courseId, courses, session }: { courseId: st
                 <span className="badge badge-dark">{course.authorType === "MAIN_COMPANY" ? "Официальный курс" : "Партнёрский курс"}</span>
                 <span className="badge badge-dark">{levelLabel(course.level)}</span>
               </div>
-              <h1 className="mt-2 text-3xl font-bold tracking-tight text-white">{course.title}</h1>
+              <h1 className="mt-2 text-2xl font-bold tracking-tight text-white sm:text-3xl">{course.title}</h1>
               <p className="mt-1.5 max-w-2xl text-[14px] leading-6 text-white/60">{course.description}</p>
             </div>
           )}
@@ -638,7 +638,7 @@ export function CourseDetailsPage({ courseId, courses, session }: { courseId: st
     <div className="grid gap-5">
       {/* Hero header */}
       <section className="overflow-hidden rounded-3xl border border-line bg-white shadow-card">
-        <div className="bg-hero-gradient p-6">
+        <div className="bg-hero-gradient p-5 sm:p-6">
           <button onClick={() => navigate(`/courses/${courseId}`)} className="mb-4 inline-flex items-center gap-1.5 text-[13px] font-medium text-white/60 transition hover:text-white">
             <ChevronLeft size={15} />
             О курсе
@@ -648,7 +648,7 @@ export function CourseDetailsPage({ courseId, courses, session }: { courseId: st
             <span className="badge badge-dark">{levelLabel(course.level)}</span>
             <span className="badge badge-dark">{course.durationHours} ч</span>
           </div>
-          <h1 className="mt-3 text-3xl font-bold tracking-tight text-white">{course.title}</h1>
+          <h1 className="mt-3 text-2xl font-bold tracking-tight text-white sm:text-3xl">{course.title}</h1>
           <p className="mt-2 max-w-2xl text-[14px] leading-6 text-white/60">{course.description}</p>
         </div>
       </section>
@@ -893,7 +893,7 @@ function LessonCard({ lesson, answers, setAnswers, completedScore, disabled, onC
 function PageHeader({ title, text }: { title: string; text: string }) {
   return (
     <section className="rounded-3xl border border-line bg-white p-8 shadow-card">
-      <h1 className="text-3xl font-bold tracking-tight text-ink">{title}</h1>
+      <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">{title}</h1>
       <p className="mt-2 max-w-2xl text-[14px] leading-6 text-muted">{text}</p>
     </section>
   );

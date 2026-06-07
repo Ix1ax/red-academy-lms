@@ -282,9 +282,12 @@ public class OrganizationService {
                                 (id, organization_id, email, role, status, message)
                             VALUES (?, ?, lower(?), 'CORPORATE_STUDENT', 'PENDING', ?)
                             """, id, organizationId, request.email(), request.message());
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Pending invite already exists for this email");
+        } catch (org.springframework.dao.DuplicateKeyException e) {
+            // Only a real unique-index hit means a pending invite already exists.
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Для этого email уже есть активное приглашение");
         }
+        // Any other DataAccessException (e.g. missing column / schema drift) is left
+        // to propagate so the real cause surfaces in logs instead of a misleading 409.
         var rows = jdbc.query("""
                 SELECT i.id, i.organization_id, o.name AS name, i.email, i.role, i.status,
                        i.message, i.created_at, i.accepted_at

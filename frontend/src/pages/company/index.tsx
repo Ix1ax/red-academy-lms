@@ -177,10 +177,10 @@ export function CompanyPage({
   return (
     <div className="grid gap-5">
       {/* Header */}
-      <section className="rounded-3xl border border-line bg-white p-6 shadow-panel">
+      <section className="rounded-3xl border border-line bg-white p-5 shadow-panel sm:p-6">
         <div className="flex items-center gap-3">
-          <Building2 className="text-primary" size={24} />
-          <h1 className="text-3xl font-semibold tracking-tight text-ink">
+          <Building2 className="shrink-0 text-primary" size={24} />
+          <h1 className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
             {isMainCompany ? "Кабинет главной компании" : "Кабинет корпоративного клиента"}
           </h1>
         </div>
