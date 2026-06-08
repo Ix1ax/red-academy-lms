@@ -235,6 +235,29 @@ public class OrganizationService {
                 .orElse(new MemberDto(id, organizationId, request.userId(), request.role(), "ACTIVE", null, null));
     }
 
+    public void removeMember(UUID organizationId, UUID userId) {
+        get(organizationId);
+        int deleted = jdbc.update("""
+                        DELETE FROM organization.organization_members
+                        WHERE organization_id = ? AND user_id = ?
+                        """, organizationId, userId);
+        if (deleted == 0) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Сотрудник не найден в этой компании");
+        }
+        // Detach the user from the company and drop them back to a plain student.
+        jdbc.update("""
+                        UPDATE identity.users
+                        SET organization_id = NULL,
+                            role = 'STUDENT',
+                            updated_at = now()
+                        WHERE id = ? AND organization_id = ?
+                        """, userId, organizationId);
+        events.publish("organization.employee_removed", Map.of(
+                "organizationId", organizationId.toString(),
+                "userId", userId.toString()
+        ));
+    }
+
     public PartnerRequestDto rejectPartner(UUID id, String reason) {
         var request = getPartnerRequest(id);
         if (!"PENDING".equals(request.status())) {

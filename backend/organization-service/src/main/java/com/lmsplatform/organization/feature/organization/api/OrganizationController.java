@@ -100,6 +100,12 @@ public class OrganizationController {
         return organizations.members(organizationId);
     }
 
+    @DeleteMapping("/{organizationId}/members/{userId}")
+    public void removeMember(@PathVariable("organizationId") UUID organizationId,
+                             @PathVariable("userId") UUID userId) {
+        organizations.removeMember(organizationId, userId);
+    }
+
     // ─── Invites ─────────────────────────────────────────────────────────────
 
     @PostMapping("/{organizationId}/invites")

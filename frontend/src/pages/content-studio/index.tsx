@@ -523,11 +523,11 @@ export function IntensiveEditorPage({
 
           <StudioStep number="1" title="Этапы интенсива" text="Интенсив всегда идёт в три этапа: вводный, основной и финальный. Укажите даты открытия/закрытия каждого этапа или оставьте пустыми — тогда даты распределятся автоматически.">
             <div className="grid gap-4 xl:grid-cols-[220px_minmax(0,1fr)]">
-              <aside className="grid content-start gap-2 rounded-2xl border border-line bg-white p-2">
+              <aside className="grid min-w-0 content-start gap-2 rounded-2xl border border-line bg-white p-2">
                 {stages.map((stage, index) => (
-                  <button key={stage.id} onClick={() => setActiveStageId(stage.id)} className={`rounded-xl px-3 py-3 text-left text-sm transition ${activeStage?.id === stage.id ? "bg-primary text-white" : "text-muted hover:bg-red-50 hover:text-primary"}`}>
+                  <button key={stage.id} onClick={() => setActiveStageId(stage.id)} className={`min-w-0 rounded-xl px-3 py-3 text-left text-sm transition ${activeStage?.id === stage.id ? "bg-primary text-white" : "text-muted hover:bg-red-50 hover:text-primary"}`}>
                     <span className="block text-xs font-medium opacity-80">Этап {index + 1}</span>
-                    <span className="mt-1 block truncate font-semibold">{stage.title}</span>
+                    <span className="block truncate font-semibold mt-1">{stage.title}</span>
                   </button>
                 ))}
               </aside>

@@ -22,6 +22,7 @@ import {
   RotateCcw,
   Search,
   ShieldCheck,
+  Trash2,
   Trophy,
   UserPlus,
   UsersRound,
@@ -117,6 +118,7 @@ export function AdminPage({ courses, intensives, session }: { courses: Course[];
   const [searchingUsers, setSearchingUsers] = useState(false);
   const [addingUserId, setAddingUserId] = useState("");
   const [addUserRole, setAddUserRole] = useState("CORPORATE_STUDENT");
+  const [removingMemberId, setRemovingMemberId] = useState("");
 
   async function load() {
     if (loading) return;
@@ -188,6 +190,22 @@ export function AdminPage({ courses, intensives, session }: { courses: Course[];
       toastError("Ошибка", e instanceof Error ? e.message : undefined);
     } finally {
       setAddingUserId("");
+    }
+  }
+
+  async function removeMemberFromOrg(orgId: string, userId: string) {
+    if (removingMemberId) return;
+    if (!confirm("Удалить сотрудника из компании? Он потеряет доступ к её курсам и интенсивам.")) return;
+    setRemovingMemberId(userId);
+    try {
+      await apiRequest(`/api/organizations/${orgId}/members/${userId}`, { method: "DELETE" });
+      toastSuccess("Сотрудник удалён", "Пользователь откреплён от компании.");
+      await loadOrgMembers(orgId);
+      await load();
+    } catch (e) {
+      toastError("Не удалось удалить сотрудника", e instanceof Error ? e.message : undefined);
+    } finally {
+      setRemovingMemberId("");
     }
   }
 
@@ -483,6 +501,14 @@ export function AdminPage({ courses, intensives, session }: { courses: Course[];
                                       {m.email && <p className="truncate text-[11px] text-muted">{m.email}</p>}
                                     </div>
                                     <span className="shrink-0 rounded-full bg-white px-2 py-0.5 text-[10px] font-medium text-muted border border-line">{memberRoleLabel(m.role)}</span>
+                                    <button
+                                      onClick={() => removeMemberFromOrg(org.id, m.userId)}
+                                      disabled={Boolean(removingMemberId)}
+                                      title="Удалить из компании"
+                                      className="grid h-7 w-7 shrink-0 place-items-center rounded-lg border border-line text-muted transition hover:border-red-300 hover:text-red-600 disabled:opacity-50"
+                                    >
+                                      <Trash2 size={12} />
+                                    </button>
                                   </div>
                                 ))}
                               </div>

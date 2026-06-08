@@ -4,7 +4,7 @@ import { apiRequest } from "@/shared/api/client";
 import { apiUrl } from "@/shared/api/config";
 import type { Session } from "@/shared/auth/session";
 import { getAccessToken } from "@/shared/auth/session";
-import { courseStatusLabel, intensiveStatusLabel } from "@/shared/lib/labels";
+import { courseStatusLabel, intensiveStatusLabel, memberRoleLabel } from "@/shared/lib/labels";
 import { navigate } from "@/shared/router";
 import { StatisticsExport } from "@/shared/ui/StatisticsExport";
 import { StudioField } from "@/shared/ui/studio";
@@ -13,13 +13,19 @@ import {
   BookOpen,
   Building2,
   ClipboardCheck,
+  Clock,
   FileText,
   Layers3,
   Loader2,
+  Mail,
   Pencil,
   Save,
+  Send,
+  Trash2,
   Trophy,
   Upload,
+  UserPlus,
+  Users,
   UsersRound,
   X,
 } from "lucide-react";
@@ -36,6 +42,27 @@ type OrgData = {
   docEgrulId?: string | null;
   docCharterId?: string | null;
   docPoaId?: string | null;
+};
+
+type CompanyMember = {
+  id: string;
+  organizationId: string;
+  userId: string;
+  role: string;
+  status: string;
+  email?: string | null;
+  fullName?: string | null;
+};
+
+type Invite = {
+  id: string;
+  organizationId: string;
+  organizationName: string;
+  email: string;
+  role: string;
+  status: string;
+  message?: string | null;
+  createdAt: string;
 };
 
 const DOC_TYPES: { key: keyof OrgData; apiType: string; label: string; hint: string }[] = [
@@ -65,6 +92,14 @@ export function PartnerPage({
 
   const [orgData, setOrgData] = useState<OrgData | null>(null);
 
+  // Employees
+  const [members, setMembers] = useState<CompanyMember[]>([]);
+  const [invites, setInvites] = useState<Invite[]>([]);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteMessage, setInviteMessage] = useState("");
+  const [sendingInvite, setSendingInvite] = useState(false);
+  const [removingMemberId, setRemovingMemberId] = useState("");
+
   // Company edit state
   const [editingCompany, setEditingCompany] = useState(false);
   const [editName, setEditName] = useState("");
@@ -78,7 +113,58 @@ export function PartnerPage({
     apiRequest<OrgData>(`/api/organizations/${session.user.organizationId}`)
       .then(setOrgData)
       .catch(() => {/* silent */});
+    loadEmployees();
   }, [session?.user.organizationId]);
+
+  async function loadEmployees() {
+    if (!session?.user.organizationId) return;
+    try {
+      const [nextMembers, nextInvites] = await Promise.all([
+        apiRequest<CompanyMember[]>(`/api/organizations/${session.user.organizationId}/members`),
+        apiRequest<Invite[]>(`/api/organizations/${session.user.organizationId}/invites`),
+      ]);
+      setMembers(nextMembers);
+      setInvites(nextInvites);
+    } catch {/* silent */}
+  }
+
+  async function sendInvite() {
+    if (sendingInvite) return;
+    if (!inviteEmail.trim() || !session?.user.organizationId) {
+      toastError("Укажите email сотрудника");
+      return;
+    }
+    setSendingInvite(true);
+    try {
+      const created = await apiRequest<Invite>(`/api/organizations/${session.user.organizationId}/invites`, {
+        method: "POST",
+        body: JSON.stringify({ email: inviteEmail.trim(), message: inviteMessage.trim() || null }),
+      });
+      setInvites((prev) => [created, ...prev]);
+      setInviteEmail("");
+      setInviteMessage("");
+      toastSuccess("Приглашение создано", `Сотруднику ${created.email} нужно войти в профиль и принять инвайт.`);
+    } catch (e) {
+      toastError("Не удалось отправить приглашение", e instanceof Error ? e.message : undefined);
+    } finally {
+      setSendingInvite(false);
+    }
+  }
+
+  async function removeMember(member: CompanyMember) {
+    if (removingMemberId || !session?.user.organizationId) return;
+    if (!confirm(`Удалить сотрудника ${member.fullName || member.email || ""} из компании?`)) return;
+    setRemovingMemberId(member.userId);
+    try {
+      await apiRequest(`/api/organizations/${session.user.organizationId}/members/${member.userId}`, { method: "DELETE" });
+      setMembers((prev) => prev.filter((m) => m.userId !== member.userId));
+      toastSuccess("Сотрудник удалён", "Пользователь откреплён от компании.");
+    } catch (e) {
+      toastError("Не удалось удалить сотрудника", e instanceof Error ? e.message : undefined);
+    } finally {
+      setRemovingMemberId("");
+    }
+  }
 
   function startEdit() {
     setEditName(orgData?.name ?? "");
@@ -257,6 +343,107 @@ export function PartnerPage({
           )}
         </div>
       )}
+
+      {/* Employees */}
+      <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+        {/* Invite */}
+        <div className="rounded-3xl border border-line bg-white p-5 shadow-panel">
+          <div className="mb-4 flex items-center gap-2">
+            <div className="grid h-9 w-9 place-items-center rounded-xl bg-red-50 text-primary">
+              <UserPlus size={18} />
+            </div>
+            <div>
+              <h2 className="text-[15px] font-semibold text-ink">Пригласить сотрудника</h2>
+              <p className="text-[12px] text-muted">Инвайт появится в профиле пользователя</p>
+            </div>
+          </div>
+          <div className="rounded-2xl bg-surface p-4">
+            <div className="grid gap-3">
+              <StudioField label="Email сотрудника" value={inviteEmail} onChange={setInviteEmail} />
+              <label className="grid gap-1.5 text-sm font-medium text-ink">
+                Сообщение (необязательно)
+                <textarea
+                  className="min-h-16 rounded-xl border border-line px-3 py-2 text-sm outline-none focus:border-primary"
+                  placeholder="Добро пожаловать в команду!"
+                  value={inviteMessage}
+                  onChange={(e) => setInviteMessage(e.target.value)}
+                />
+              </label>
+              <button
+                onClick={sendInvite}
+                disabled={sendingInvite || !inviteEmail.trim()}
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-red-gradient px-5 text-sm font-semibold text-white shadow-red-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Send size={15} />
+                {sendingInvite ? "Отправляю..." : "Отправить приглашение"}
+              </button>
+            </div>
+          </div>
+
+          {invites.filter((i) => i.status === "PENDING").length > 0 && (
+            <div className="mt-4">
+              <p className="mb-2 text-[12px] font-semibold uppercase tracking-wider text-muted">
+                Ожидают принятия ({invites.filter((i) => i.status === "PENDING").length})
+              </p>
+              <div className="grid gap-2">
+                {invites.filter((i) => i.status === "PENDING").map((inv) => (
+                  <div key={inv.id} className="flex items-center gap-3 rounded-xl border border-line bg-amber-50/50 p-3">
+                    <Mail size={14} className="shrink-0 text-amber-600" />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[13px] font-medium text-ink">{inv.email}</p>
+                      <p className="flex items-center gap-1 text-[11px] text-muted">
+                        <Clock size={10} />
+                        {new Date(inv.createdAt).toLocaleDateString("ru-RU")}
+                      </p>
+                    </div>
+                    <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700">Ожидание</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Members list */}
+        <aside className="rounded-3xl border border-line bg-white p-5 shadow-panel">
+          <div className="mb-4 flex items-center gap-2">
+            <div className="grid h-9 w-9 place-items-center rounded-xl bg-red-50 text-primary">
+              <Users size={17} />
+            </div>
+            <h2 className="text-[15px] font-semibold text-ink">
+              Сотрудники ({members.filter((m) => m.status === "ACTIVE").length})
+            </h2>
+          </div>
+          {members.filter((m) => m.status === "ACTIVE").length === 0 ? (
+            <p className="rounded-2xl bg-surface p-3 text-[13px] text-muted">Сотрудники появятся после принятия инвайтов.</p>
+          ) : (
+            <div className="grid gap-2">
+              {members.filter((m) => m.status === "ACTIVE").map((member) => (
+                <div key={member.id} className="flex items-center gap-3 rounded-xl border border-line p-3">
+                  <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary-light text-[12px] font-bold text-primary">
+                    {(member.fullName || member.email || "?").charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[13px] font-semibold text-ink">{member.fullName || "Сотрудник"}</p>
+                    {member.email && <p className="truncate text-[11px] text-muted">{member.email}</p>}
+                  </div>
+                  <span className="shrink-0 rounded-full bg-surface px-2 py-0.5 text-[10px] font-medium text-muted">
+                    {memberRoleLabel(member.role)}
+                  </span>
+                  <button
+                    onClick={() => removeMember(member)}
+                    disabled={Boolean(removingMemberId)}
+                    title="Удалить из компании"
+                    className="grid h-7 w-7 shrink-0 place-items-center rounded-lg border border-line text-muted transition hover:border-red-300 hover:text-red-600 disabled:opacity-50"
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </aside>
+      </section>
 
       {/* Course-completion statistics (scoped to this company by the backend) */}
       <StatisticsExport title="Статистика моих сотрудников и курсов" />
