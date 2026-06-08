@@ -31,13 +31,11 @@ db.{$APP_DOMAIN} {
 }
 
 # ─── MinIO Console ───────────────────────────────────────────────────────────
-# https://minio.<домен> — closed by basic-auth, then MinIO's own login screen
+# https://minio.<домен> — без basic-auth: HTTP Basic ломает API консоли MinIO
+# (браузер шлёт Authorization: Basic на /api/v1/*, MinIO принимает его за свою
+# AWS-подпись и отдаёт 401). Защита — собственный логин консоли (root user/pass).
 minio.{$APP_DOMAIN} {
 	encode zstd gzip
-
-	basic_auth {
-		viewer $2b$14$UnbsN/tLJ7lM/dBYYP7OPunMfG0FkYtaoEOVSotYknubdy70gumTC
-	}
 
 	reverse_proxy minio:9001
 }
