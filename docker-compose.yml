@@ -16,6 +16,8 @@ services:
     depends_on:
       - frontend
       - gateway
+      - adminer
+      - minio
 
   postgres:
     image: postgres:16-alpine
@@ -69,6 +71,8 @@ services:
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minio}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minio_password}
+      # Tells the MinIO console its external URL so it works behind the Caddy reverse proxy
+      MINIO_BROWSER_REDIRECT_URL: https://minio.${APP_DOMAIN:-xn--80aakcbevmv6a5n.xn--p1ai}
     ports:
       - "127.0.0.1:${MINIO_API_PORT:-9000}:9000"
       - "127.0.0.1:${MINIO_CONSOLE_PORT:-9001}:9001"
@@ -79,6 +83,20 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+
+  adminer:
+    image: adminer:4.8.1
+    container_name: lms-adminer
+    restart: unless-stopped
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+      ADMINER_DESIGN: dracula
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # No published port on purpose: only Caddy reaches it on the internal network
+    expose:
+      - "8080"
 
   identity-service:
     build:

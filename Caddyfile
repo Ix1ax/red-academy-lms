@@ -17,3 +17,27 @@
 		reverse_proxy frontend:80
 	}
 }
+
+# ─── Браузерная БД (Adminer) ─────────────────────────────────────────────────
+# https://db.<домен> — закрыто basic-auth, дальше логин в саму БД
+db.{$APP_DOMAIN} {
+	encode zstd gzip
+
+	basic_auth {
+		viewer $2b$14$UnbsN/tLJ7lM/dBYYP7OPunMfG0FkYtaoEOVSotYknubdy70gumTC
+	}
+
+	reverse_proxy adminer:8080
+}
+
+# ─── MinIO Console ───────────────────────────────────────────────────────────
+# https://minio.<домен> — closed by basic-auth, then MinIO's own login screen
+minio.{$APP_DOMAIN} {
+	encode zstd gzip
+
+	basic_auth {
+		viewer $2b$14$UnbsN/tLJ7lM/dBYYP7OPunMfG0FkYtaoEOVSotYknubdy70gumTC
+	}
+
+	reverse_proxy minio:9001
+}
