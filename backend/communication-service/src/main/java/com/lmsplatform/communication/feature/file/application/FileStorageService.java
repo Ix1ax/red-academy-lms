@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.BucketAlreadyExistsException;
+import software.amazon.awssdk.services.s3.model.BucketAlreadyOwnedByYouException;
 import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
@@ -36,8 +38,16 @@ public class FileStorageService {
     void ensureBucket() {
         try {
             s3.headBucket(HeadBucketRequest.builder().bucket(bucket).build());
+            return;
         } catch (NoSuchBucketException ex) {
+            // Bucket missing — create it below.
+        } catch (Exception ignored) {
+            // headBucket can fail (e.g. 403) even when the bucket exists; try to create defensively.
+        }
+        try {
             s3.createBucket(CreateBucketRequest.builder().bucket(bucket).build());
+        } catch (BucketAlreadyOwnedByYouException | BucketAlreadyExistsException ignored) {
+            // Bucket already exists — nothing to do.
         } catch (Exception ignored) {
             // Uploads will fail explicitly if S3 storage is still unavailable.
         }
