@@ -71,8 +71,9 @@ services:
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minio}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minio_password}
-      # Tells the MinIO console its external URL so it works behind the Caddy reverse proxy
-      MINIO_BROWSER_REDIRECT_URL: https://minio.${APP_DOMAIN:-xn--80aakcbevmv6a5n.xn--p1ai}
+      # Внешний URL консоли в punycode — браузер шлёт Host именно так (IDN-домен).
+      # Должно совпадать с Host, иначе консоль отдаёт пустую страницу.
+      MINIO_BROWSER_REDIRECT_URL: https://minio.xn--80aakcbevmv6a5n.xn--p1ai
     ports:
       - "127.0.0.1:${MINIO_API_PORT:-9000}:9000"
       - "127.0.0.1:${MINIO_CONSOLE_PORT:-9001}:9001"
