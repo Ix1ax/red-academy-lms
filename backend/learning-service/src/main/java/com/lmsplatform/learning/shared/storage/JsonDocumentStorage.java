@@ -25,8 +25,16 @@ public class JsonDocumentStorage {
     void ensureBucket() {
         try {
             s3.headBucket(HeadBucketRequest.builder().bucket(bucket).build());
+            return;
         } catch (NoSuchBucketException ex) {
+            // Bucket missing — create it below.
+        } catch (Exception ignored) {
+            // headBucket can fail (e.g. 403) even when the bucket exists; try to create defensively.
+        }
+        try {
             s3.createBucket(CreateBucketRequest.builder().bucket(bucket).build());
+        } catch (BucketAlreadyOwnedByYouException | BucketAlreadyExistsException ignored) {
+            // Bucket already exists — nothing to do.
         } catch (Exception ignored) {
             // The first read/write will fail explicitly if storage is still unavailable.
         }
